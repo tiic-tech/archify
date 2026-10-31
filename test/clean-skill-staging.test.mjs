@@ -6,7 +6,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { isMainModule, stageCleanSkill } from '../scripts/stage-clean-skill.mjs';
+import { isMainModule, PRD_REQUIRED_INPUTS, stageCleanSkill } from '../scripts/stage-clean-skill.mjs';
 
 const stagerPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../scripts/stage-clean-skill.mjs');
 const canonicalNotices = fs.readFileSync(
@@ -42,6 +42,8 @@ function repositoryFixture() {
   write(root, 'archify/scripts/check-update.mjs', 'export {};\n');
   write(root, 'archify/scripts/update-contract.mjs', 'export {};\n');
   write(root, 'archify/renderers/shared/generated-validators.mjs', 'export {};\n');
+  for (const relative of PRD_REQUIRED_INPUTS) write(root, relative, 'fixture\n');
+  write(root, 'archify/bin/archify.mjs', "import('../explainer/workspace/prd-cli.mjs');\n");
   write(root, 'archify/renderers/shared/path-semantics.mjs', 'export {};\n');
   write(root, 'archify/renderers/shared/portable-path.mjs', 'export {};\n');
   write(root, 'test/repository-only.test.mjs', 'throw new Error();\n');
@@ -104,6 +106,7 @@ test('clean staging rejects untracked required release inputs before creating ou
       'archify/scripts/check-update.mjs',
       'archify/scripts/update-contract.mjs',
       'archify/renderers/shared/generated-validators.mjs',
+      ...PRD_REQUIRED_INPUTS,
     ]) {
       git(root, ['rm', '--cached', '-f', relative]);
       assert.throws(() => stageCleanSkill({ repoRoot: root, destination }), error => {
@@ -117,6 +120,20 @@ test('clean staging rejects untracked required release inputs before creating ou
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
+});
+
+test('pre-PRD tracked snapshots stage without adding the current PRD family', () => {
+  const root=repositoryFixture(),destination=path.join(root,'staged-skill');
+  try {
+    for(const relative of PRD_REQUIRED_INPUTS)fs.rmSync(path.join(root,relative));
+    write(root,'archify/bin/archify.mjs','export {};\n');git(root,['add','.']);
+    stageCleanSkill({repoRoot:root,destination});
+    assert.equal(fs.readFileSync(path.join(destination,'bin/archify.mjs'),'utf8'),'export {};\n');
+    for(const relative of PRD_REQUIRED_INPUTS)assert.equal(fs.existsSync(path.join(destination,relative.slice('archify/'.length))),false,relative);
+    fs.rmSync(destination,{recursive:true});write(root,'archify/bin/archify.mjs',"import('../explainer/workspace/prd-cli.mjs');\n");git(root,['add','archify/bin/archify.mjs']);
+    assert.throws(()=>stageCleanSkill({repoRoot:root,destination}),/required package input is not tracked by Git: archify\/explainer\/workspace\/prd-cli[.]mjs/);
+    assert.equal(fs.existsSync(destination),false);
+  } finally {fs.rmSync(root,{recursive:true,force:true});}
 });
 
 test('clean staging requires shared path runtimes only when packaged code imports them', () => {

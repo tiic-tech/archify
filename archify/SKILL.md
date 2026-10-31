@@ -1,15 +1,15 @@
 ---
 name: archify
-description: "Create validated architecture, workflow, sequence, data-flow, lifecycle/state, ERD, class, tree, timeline, and waterfall diagrams as explorable standalone HTML with dark/light themes, motion and image/SVG/WebM export. Accept requirements or Mermaid; inspect repository evidence for code-backed diagrams. Use when visualizing systems, API calls, pipelines, schemas, histories, timings, or everyday steps, parts, relationships and states. Also turn an answer into a one-page explainer, with the conclusion first, structured panels, native diagrams and charts, when the user asks for a page, an explainer or an answer to share (做成一页, 用页面讲), or proactively when the user's rules opt in with an [archify explainer: ...] line. Optionally add a guided story and video export to an existing native diagram. Not for dashboards."
+description: "Create evidence-backed research and PRD workspaces, or validated architecture, workflow, sequence, data-flow and lifecycle diagrams as explorable standalone HTML. Use when modeling systems, schemas, histories or relationships from requirements, Mermaid or repository evidence. Create a one-page explainer when requested (做成一页, 用页面讲) or when an [archify explainer: ...] rule opts in; add guided stories and video to native diagrams when requested. Not for dashboards."
 license: Apache-2.0
 metadata:
-  version: "3.2"
+  version: "3.3"
   author: tt-a1i
 ---
 
 # Archify
 
-Create checked standalone HTML as a native diagram or a one-page explainer that answers a question.
+Create evidence-backed, revisioned research and PRD workspaces, checked native diagrams, or a one-page explainer that answers a question.
 
 Run commands from your working directory. Unless the user names another location, give each new artifact request its own folder `.archify/<type>-<slug>-<YYYYMMDD-HHMMSS>/` there (local time, chosen once): keep the candidate and `<slug>.html` in it and reuse it for repairs. Native diagrams use `candidate.json` with `meta.output` relative to the working directory; explainers may use `candidate.archify.md` and a portable output filename. A later request gets a new folder. Replace `bin/archify.mjs` in every command with the installed package's absolute path, or its path relative to your working directory; CLI input and output paths resolve from that directory.
 
@@ -17,6 +17,7 @@ For a native diagram of a real codebase, read [Repository authoring](references/
 
 ## Choose the artifact
 
+- For source-backed research, a structured versioned workspace, or a PRD generated from modeled facts, use `prd` and read [Research and progressive authoring](references/prd-authoring.md) and [PRD workspace](references/prd-workspace.md). Start incomplete research without inventing a Service or PRD; use the Feature-first v2/standard path when the evidence supports it. This is distinct from a one-page explainer and an ordinary native diagram.
 - When the user asks to draw or visualize a system, flow, schema or history, use a native diagram and the Type router.
 - For a guided walkthrough or explanation video of a native HTML diagram, read [Story authoring](references/story-authoring.md). Use `story draft` and `story attach` to add playback and video export to its existing Viewer.
 - Use `explainer` when the user asks for the answer as a page: a page, one page, an explainer, something to share (“做成一页”, “用页面讲”, “answer with a page”). Without such a request, answer in text or draw the requested diagram. A page made on request ends its reply with the one-line mode offer under Output.

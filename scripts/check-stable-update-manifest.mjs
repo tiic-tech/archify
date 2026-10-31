@@ -38,8 +38,9 @@ if (!archivePath) fail('--archive is required.');
 const version = /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.exec(tag || '')
   ?.slice(1, 4).join('.') ?? null;
 if (!version) fail(`--tag must be a stable vMAJOR.MINOR.PATCH tag; found ${JSON.stringify(tag)}.`);
-if (sourceRef !== 'HEAD' && sourceRef !== tag) {
-  fail(`--source-ref must be HEAD or the exact release tag ${JSON.stringify(tag)}; found ${JSON.stringify(sourceRef)}.`);
+const fetchedTagRef = version ? `refs/archify/stable/${tag}` : null;
+if (sourceRef !== 'HEAD' && sourceRef !== tag && sourceRef !== fetchedTagRef) {
+  fail(`--source-ref must be HEAD or the exact release tag ${JSON.stringify(tag)} (or its exact verified-fetch ref); found ${JSON.stringify(sourceRef)}.`);
 }
 
 const packageJson = readJson('archify/package.json');
@@ -61,7 +62,7 @@ if (version) {
 
 let taggerTime = null;
 if (version) {
-  const tagRef = `refs/tags/${tag}`;
+  const tagRef = sourceRef === fetchedTagRef ? fetchedTagRef : `refs/tags/${tag}`;
   try {
     const objectType = execFileSync('git', ['-C', repoRoot, 'cat-file', '-t', tagRef], {
       encoding: 'utf8',

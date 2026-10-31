@@ -1,0 +1,2371 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://archify.local/schemas/prd-workspace-v1.json",
+  "title": "PRD workspace v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "workspaceId": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "reviewHistory": {
+      "type": "array",
+      "maxItems": 1000,
+      "items": { "$ref": "#/definitions/reviewChange" }
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "objects": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/id"
+          },
+          "type": {
+            "enum": [
+              "project",
+              "document",
+              "service",
+              "capability",
+              "taxonomy",
+              "role",
+              "journey",
+              "phase",
+              "activity",
+              "interface",
+              "section",
+              "variant",
+              "element",
+              "field",
+              "binding",
+              "rule",
+              "action",
+              "api",
+              "entity",
+              "state",
+              "transition",
+              "integration",
+              "acceptance",
+              "source",
+              "evidence",
+              "decision",
+              "question",
+              "extension",
+              "revision"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000,
+            "pattern": "\\S"
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000,
+            "pattern": "\\S"
+          },
+          "status": {
+            "enum": [
+              "current",
+              "reference",
+              "inferred",
+              "proposed",
+              "customer-confirmed",
+              "superseded"
+            ]
+          },
+          "review": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "causes": { "$ref": "#/definitions/ids" },
+              "summaryCauses": { "$ref": "#/definitions/ids" }
+            },
+            "required": ["causes"]
+          },
+          "priority": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000,
+            "pattern": "\\S"
+          },
+          "parent": {
+            "$ref": "#/definitions/id"
+          },
+          "refs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "relation": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-zA-Z0-9-]{0,63}$"
+                },
+                "target": {
+                  "$ref": "#/definitions/id"
+                },
+                "type": {
+                  "enum": [
+                    "project",
+                    "document",
+                    "service",
+                    "capability",
+                    "taxonomy",
+                    "role",
+                    "journey",
+                    "phase",
+                    "activity",
+                    "interface",
+                    "section",
+                    "variant",
+                    "element",
+                    "field",
+                    "binding",
+                    "rule",
+                    "action",
+                    "api",
+                    "entity",
+                    "state",
+                    "transition",
+                    "integration",
+                    "acceptance",
+                    "source",
+                    "evidence",
+                    "decision",
+                    "question",
+                    "extension",
+                    "revision"
+                  ]
+                },
+                "locator": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 10000,
+                  "pattern": "\\S"
+                },
+                "quote": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 10000,
+                  "pattern": "\\S"
+                },
+                "interpretation": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 10000,
+                  "pattern": "\\S"
+                }
+              },
+              "required": [
+                "relation",
+                "target",
+                "type"
+              ]
+            }
+          },
+          "assetIds": {
+            "$ref": "#/definitions/ids"
+          },
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "recordKey": {
+                "$ref": "#/definitions/id"
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4194304
+              },
+              "locator": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 10000,
+                "pattern": "\\S"
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 10000,
+                "pattern": "\\S"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "recordKey",
+              "text",
+              "locator",
+              "version",
+              "sha256"
+            ]
+          },
+          "rule": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "scope": {
+                "$ref": "#/definitions/ids"
+              },
+              "condition": {
+                "$ref": "#/definitions/predicate"
+              },
+              "effect": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 10000,
+                "pattern": "\\S"
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 10000,
+                "pattern": "\\S"
+              },
+              "precision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 10000,
+                "pattern": "\\S"
+              },
+              "time": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 10000,
+                "pattern": "\\S"
+              },
+              "exceptions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "scope": {
+                      "$ref": "#/definitions/ids"
+                    },
+                    "condition": {
+                      "$ref": "#/definitions/predicate"
+                    },
+                    "effect": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000,
+                      "pattern": "\\S"
+                    }
+                  },
+                  "required": [
+                    "scope",
+                    "condition",
+                    "effect"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "scope",
+              "condition",
+              "effect",
+              "unit",
+              "precision",
+              "time"
+            ]
+          },
+          "gap": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000,
+            "pattern": "\\S"
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000,
+            "pattern": "\\S"
+          },
+          "detail": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "title",
+          "purpose",
+          "status",
+          "detail"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "project"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "scope": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000,
+                      "pattern": "\\S"
+                    }
+                  },
+                  "required": []
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "document"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "version": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000,
+                      "pattern": "\\S"
+                    },
+                    "language": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000,
+                      "pattern": "\\S"
+                    }
+                  },
+                  "required": []
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "service"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "boundary": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000,
+                      "pattern": "\\S"
+                    }
+                  },
+                  "required": []
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "capability"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "maturity": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000,
+                      "pattern": "\\S"
+                    }
+                  },
+                  "required": []
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "taxonomy"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {},
+                  "required": []
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "role"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "actorKind": {
+                      "enum": [
+                        "human",
+                        "system"
+                      ]
+                    }
+                  },
+                  "required": []
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "journey"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "entry": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000,
+                      "pattern": "\\S"
+                    },
+                    "dashboard": {
+                      "type": "string", "minLength": 1, "maxLength": 10000, "pattern": "\\S"
+                    },
+                    "serviceAccess": {
+                      "type": "string", "minLength": 1, "maxLength": 10000, "pattern": "\\S"
+                    },
+                    "preconditions": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000,
+                      "pattern": "\\S"
+                    },
+                    "success": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000,
+                      "pattern": "\\S"
+                    }
+                  },
+                  "required": []
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "phase"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {},
+                  "required": []
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "activity"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "actorKind": {
+                      "enum": [
+                        "human",
+                        "system"
+                      ]
+                    },
+                    "outcome": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000,
+                      "pattern": "\\S"
+                    }
+                  },
+                  "required": [
+                    "actorKind"
+                  ]
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "interface"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "page",
+                        "list",
+                        "dialog",
+                        "wizard"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "section"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {},
+                  "required": []
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "variant"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "route",
+                        "dialog",
+                        "wizard-step",
+                        "state"
+                      ]
+                    },
+                    "predicate": {
+                      "$ref": "#/definitions/predicate"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "predicate"
+                  ]
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "element"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "button",
+                        "filter",
+                        "sort",
+                        "search",
+                        "column",
+                        "indicator",
+                        "upload",
+                        "step",
+                        "text",
+                        "other"
+                      ]
+                    },
+                    "behavior": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000,
+                      "pattern": "\\S"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "field"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "dataType": {
+                      "enum": [
+                        "string",
+                        "number",
+                        "integer",
+                        "boolean",
+                        "date",
+                        "datetime",
+                        "enum",
+                        "object"
+                      ]
+                    },
+                    "unit": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000,
+                      "pattern": "\\S"
+                    },
+                    "precision": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000,
+                      "pattern": "\\S"
+                    }
+                  },
+                  "required": [
+                    "dataType"
+                  ]
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "binding"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "visibility": {
+                      "$ref": "#/definitions/bindingPredicate"
+                    },
+                    "editable": {
+                      "$ref": "#/definitions/bindingPredicate"
+                    },
+                    "required": {
+                      "$ref": "#/definitions/bindingPredicate"
+                    }
+                  },
+                  "required": [
+                    "visibility",
+                    "editable",
+                    "required"
+                  ]
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "rule"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {},
+                  "required": []
+                }
+              },
+              "required": [
+                "rule"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "action"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "contracts": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "actor": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "permission": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "input": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "output": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "guard": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "stateEffects": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "errors": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "audit": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "idempotency": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "concurrency": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "transaction": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "batch": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "externalEffects": {
+                          "$ref": "#/definitions/fact"
+                        }
+                      },
+                      "required": []
+                    }
+                  },
+                  "required": [
+                    "contracts"
+                  ]
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "api"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "contracts": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "actor": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "permission": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "input": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "output": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "guard": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "stateEffects": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "errors": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "audit": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "idempotency": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "concurrency": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "transaction": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "batch": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "externalEffects": {
+                          "$ref": "#/definitions/fact"
+                        }
+                      },
+                      "required": []
+                    }
+                  },
+                  "required": [
+                    "contracts"
+                  ]
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "entity"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "identity": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000,
+                      "pattern": "\\S"
+                    }
+                  },
+                  "required": []
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "state"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "terminal": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": []
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "transition"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "trigger": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000,
+                      "pattern": "\\S"
+                    },
+                    "condition": {
+                      "$ref": "#/definitions/predicate"
+                    },
+                    "effect": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000,
+                      "pattern": "\\S"
+                    }
+                  },
+                  "required": []
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "integration"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "contracts": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "actor": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "permission": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "input": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "output": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "guard": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "stateEffects": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "errors": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "audit": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "idempotency": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "concurrency": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "transaction": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "batch": {
+                          "$ref": "#/definitions/fact"
+                        },
+                        "externalEffects": {
+                          "$ref": "#/definitions/fact"
+                        }
+                      },
+                      "required": []
+                    }
+                  },
+                  "required": [
+                    "contracts"
+                  ]
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "acceptance"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "scenario": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000,
+                      "pattern": "\\S"
+                    },
+                    "outcome": {
+                      "enum": [
+                        "success",
+                        "error",
+                        "cancel",
+                        "other"
+                      ]
+                    },
+                    "expected": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000,
+                      "pattern": "\\S"
+                    }
+                  },
+                  "required": [
+                    "scenario",
+                    "outcome",
+                    "expected"
+                  ]
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "source"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {},
+                  "required": []
+                }
+              },
+              "required": [
+                "source"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "evidence"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "scope": {
+                      "$ref": "#/definitions/ids"
+                    },
+                    "interpretation": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000,
+                      "pattern": "\\S"
+                    },
+                    "confidence": {
+                      "enum": [
+                        "observed",
+                        "inferred",
+                        "proposed",
+                        "confirmed"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "scope",
+                    "interpretation",
+                    "confidence"
+                  ]
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "decision"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "scope": {
+                      "$ref": "#/definitions/ids"
+                    },
+                    "authority": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000,
+                      "pattern": "\\S"
+                    },
+                    "meeting": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "date": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 10000,
+                          "pattern": "\\S"
+                        },
+                        "participants": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 10000,
+                            "pattern": "\\S"
+                          }
+                        },
+                        "record": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 10000,
+                          "pattern": "\\S"
+                        }
+                      },
+                      "required": [
+                        "date",
+                        "participants",
+                        "record"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "scope",
+                    "authority",
+                    "meeting"
+                  ]
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "question"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "scope": {
+                      "$ref": "#/definitions/ids"
+                    },
+                    "consequence": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000,
+                      "pattern": "\\S"
+                    },
+                    "options": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 10000,
+                        "pattern": "\\S"
+                      }
+                    },
+                    "assumptions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 10000,
+                        "pattern": "\\S"
+                      }
+                    },
+                    "gapKeys": {
+                      "type": "array",
+                      "maxItems": 256,
+                      "uniqueItems": true,
+                      "items": { "type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}:[A-Za-z0-9/_-]+$" }
+                    },
+                    "confirmingFunction": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000,
+                      "pattern": "\\S"
+                    },
+                    "blocking": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "scope",
+                    "consequence",
+                    "options",
+                    "assumptions",
+                    "confirmingFunction",
+                    "blocking"
+                  ]
+                }
+              },
+              "required": []
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "extension"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {},
+                  "required": []
+                }
+              },
+              "required": [
+                "content"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "const": "revision"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "properties": {
+                "detail": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "scope": {
+                      "$ref": "#/definitions/ids"
+                    },
+                    "version": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 10000,
+                      "pattern": "\\S"
+                    }
+                  },
+                  "required": [
+                    "scope",
+                    "version"
+                  ]
+                }
+              },
+              "required": []
+            }
+          }
+        ]
+      }
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "documentLayout": {
+          "enum": ["inline", "referenced"]
+        },
+        "productDocument": { "$ref": "#/definitions/productDocument" },
+        "id": {
+          "$ref": "#/definitions/id"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 10000,
+          "pattern": "\\S"
+        },
+        "components": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "$ref": "#/definitions/id"
+              },
+              "version": {
+                "const": 1
+              },
+              "type": {
+                "enum": [
+                  "control",
+                  "overview",
+                  "capability-index",
+                  "role-journey",
+                  "process-view",
+                  "interface",
+                  "element-behavior",
+                  "data-fields",
+                  "scenario",
+                  "lifecycle",
+                  "integration",
+                  "evidence",
+                  "development-appendix"
+                ]
+              },
+              "heading": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 10000,
+                "pattern": "\\S"
+              },
+              "selector": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "types": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                      "enum": [
+                        "project",
+                        "document",
+                        "service",
+                        "capability",
+                        "taxonomy",
+                        "role",
+                        "journey",
+                        "phase",
+                        "activity",
+                        "interface",
+                        "section",
+                        "variant",
+                        "element",
+                        "field",
+                        "binding",
+                        "rule",
+                        "action",
+                        "api",
+                        "entity",
+                        "state",
+                        "transition",
+                        "integration",
+                        "acceptance",
+                        "source",
+                        "evidence",
+                        "decision",
+                        "question",
+                        "extension",
+                        "revision"
+                      ]
+                    }
+                  },
+                  "ids": {
+                    "$ref": "#/definitions/ids"
+                  },
+                  "scope": {
+                    "$ref": "#/definitions/ids"
+                  }
+                },
+                "required": [
+                  "types"
+                ]
+              },
+              "requiredWhen": {
+                "enum": [
+                  "always",
+                  "selected",
+                  "never"
+                ]
+              },
+              "gapPolicy": {
+                "enum": [
+                  "include",
+                  "error"
+                ]
+              },
+              "clientProjection": {
+                "enum": [
+                  "include",
+                  "omit"
+                ]
+              },
+              "outputs": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "enum": [
+                    "workspace",
+                    "document",
+                    "appendix"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "id",
+              "version",
+              "type",
+              "heading",
+              "selector",
+              "requiredWhen",
+              "gapPolicy",
+              "clientProjection",
+              "outputs"
+            ]
+          }
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "components"
+      ]
+    },
+    "assets": {
+      "type": "array",
+      "maxItems": 128,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/id"
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000,
+            "pattern": "\\S"
+          },
+          "name": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+          },
+          "mediaType": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000,
+            "pattern": "\\S"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "distributable": {
+            "type": "boolean"
+          },
+          "caption": {
+            "type": "string", "minLength": 1, "maxLength": 10000, "pattern": "\\S"
+          },
+          "version": {
+            "type": "string", "minLength": 1, "maxLength": 10000, "pattern": "\\S"
+          },
+          "limitations": {
+            "type": "string", "minLength": 1, "maxLength": 10000, "pattern": "\\S"
+          }
+        },
+        "required": [
+          "id",
+          "path",
+          "name",
+          "mediaType",
+          "sha256",
+          "distributable"
+        ]
+      }
+    },
+    "nativeViews": {
+      "type": "array",
+      "maxItems": 128,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/definitions/id"
+          },
+          "service": {
+            "$ref": "#/definitions/id"
+          },
+          "diagramType": {
+            "enum": [
+              "architecture",
+              "workflow",
+              "sequence",
+              "dataflow",
+              "lifecycle",
+              "erd",
+              "tree",
+              "class",
+              "timeline",
+              "waterfall"
+            ]
+          },
+          "spec": {
+            "type": "object"
+          },
+          "source": {
+            "$ref": "#/definitions/id"
+          },
+          "anchor": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "locator": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 10000,
+                "pattern": "\\S"
+              },
+              "quote": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 10000,
+                "pattern": "\\S"
+              }
+            },
+            "required": [
+              "locator",
+              "quote"
+            ]
+          },
+          "laneBindings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "lane": {
+                  "$ref": "#/definitions/id"
+                },
+                "role": {
+                  "$ref": "#/definitions/id"
+                }
+              },
+              "required": [
+                "lane",
+                "role"
+              ]
+            }
+          },
+          "bindings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "node": {
+                  "$ref": "#/definitions/id"
+                },
+                "targets": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "href": { "type": "string", "minLength": 1, "maxLength": 2048 },
+                      "object": { "$ref": "#/definitions/id" },
+                      "type": { "type": "string", "minLength": 1 }
+                    },
+                    "required": ["href", "object", "type"]
+                  }
+                },
+                "object": {
+                  "$ref": "#/definitions/id"
+                },
+                "type": {
+                  "enum": [
+                    "project",
+                    "document",
+                    "service",
+                    "capability",
+                    "taxonomy",
+                    "role",
+                    "journey",
+                    "phase",
+                    "activity",
+                    "interface",
+                    "section",
+                    "variant",
+                    "element",
+                    "field",
+                    "binding",
+                    "rule",
+                    "action",
+                    "api",
+                    "entity",
+                    "state",
+                    "transition",
+                    "integration",
+                    "acceptance",
+                    "source",
+                    "evidence",
+                    "decision",
+                    "question",
+                    "extension",
+                    "revision"
+                  ]
+                }
+              },
+              "required": [
+                "node",
+                "object",
+                "type"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "diagramType",
+          "spec",
+          "source",
+          "anchor",
+          "bindings"
+        ]
+      }
+    },
+    "presentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "camera": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "zoom": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "required": [
+            "x",
+            "y",
+            "zoom"
+          ]
+        },
+        "positions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "object": {
+                "$ref": "#/definitions/id"
+              },
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "object",
+              "x",
+              "y"
+            ]
+          }
+        }
+      },
+      "required": []
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "objects",
+    "profile",
+    "assets",
+    "nativeViews"
+  ],
+  "definitions": {
+    "reviewChange": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "proposalId": { "$ref": "#/definitions/id" },
+        "baseRevision": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "storeRevision": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "objectId": { "$ref": "#/definitions/id" },
+        "path": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "oldValue": { "anyOf": [{ "type": "null" }, { "type": "string", "maxLength": 10000 }, { "$ref": "#/definitions/fact" }] },
+        "newValue": { "anyOf": [{ "type": "string", "minLength": 1, "maxLength": 10000, "pattern": "\\S" }, { "$ref": "#/definitions/fact" }] },
+        "oldHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "commentIds": { "$ref": "#/definitions/ids" },
+        "sourceIds": { "$ref": "#/definitions/ids" },
+        "decisionIds": { "$ref": "#/definitions/ids" },
+        "previousStatus": { "enum": ["current", "reference", "inferred", "proposed", "customer-confirmed", "superseded"] }
+      },
+      "required": ["proposalId", "baseRevision", "storeRevision", "objectId", "path", "oldValue", "newValue", "oldHash", "commentIds", "sourceIds", "decisionIds", "previousStatus"]
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+    },
+    "ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/definitions/id"
+      }
+    },
+    "productText": { "type": "string", "minLength": 1, "maxLength": 10000, "pattern": "\\S" },
+    "productWorkflow": {
+      "type": "object", "additionalProperties": false,
+      "properties": { "view": { "$ref": "#/definitions/id" }, "caption": { "$ref": "#/definitions/productText" } },
+      "required": ["view", "caption"]
+    },
+    "productPage": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/id" }, "interface": { "$ref": "#/definitions/id" },
+        "variant": { "$ref": "#/definitions/id" }, "entry": { "$ref": "#/definitions/productText" },
+        "items": { "$ref": "#/definitions/ids" }, "questions": { "$ref": "#/definitions/ids" },
+        "reuse": { "$ref": "#/definitions/id" }
+      },
+      "required": ["id", "interface", "entry", "items"]
+    },
+    "productUseCase": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/id" }, "title": { "$ref": "#/definitions/productText" },
+        "activity": { "$ref": "#/definitions/id" }, "story": { "$ref": "#/definitions/productText" },
+        "pages": { "type": "array", "maxItems": 1000, "items": { "$ref": "#/definitions/productPage" } },
+        "items": { "$ref": "#/definitions/ids" }, "questions": { "$ref": "#/definitions/ids" },
+        "workflows": { "type": "array", "items": { "$ref": "#/definitions/productWorkflow" } },
+        "postconditions": { "$ref": "#/definitions/productText" },
+        "edgeCases": { "type": "array", "items": {
+          "type": "object", "additionalProperties": false,
+          "properties": { "question": { "$ref": "#/definitions/id" }, "rule": { "$ref": "#/definitions/id" }, "note": { "$ref": "#/definitions/productText" } },
+          "anyOf": [{ "required": ["question"] }, { "required": ["rule"] }]
+        } }
+      },
+      "required": ["id", "title", "activity", "story", "pages", "postconditions", "edgeCases"]
+    },
+    "productRoleChapter": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/id" }, "role": { "$ref": "#/definitions/id" },
+        "journey": { "$ref": "#/definitions/id" }, "useCases": { "$ref": "#/definitions/ids" },
+        "acceptance": { "$ref": "#/definitions/ids" },
+        "workflows": { "type": "array", "items": { "$ref": "#/definitions/productWorkflow" } }
+      },
+      "required": ["id", "role", "useCases"]
+    },
+    "productDocument": {
+      "oneOf": [
+        { "$ref": "#/definitions/productDocumentV1" },
+        { "$ref": "#/definitions/productDocumentV2" }
+      ]
+    },
+    "productDocumentV1": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "version": { "const": 1 },
+        "services": { "type": "array", "minItems": 1, "maxItems": 1000, "items": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "service": { "$ref": "#/definitions/id" }, "module": { "$ref": "#/definitions/productText" },
+            "overview": { "$ref": "#/definitions/productText" },
+            "features": { "type": "array", "items": { "type": "object", "additionalProperties": false,
+              "properties": { "object": { "$ref": "#/definitions/id" }, "subModule": { "$ref": "#/definitions/productText" }, "note": { "$ref": "#/definitions/productText" } },
+              "required": ["object", "subModule"] } },
+            "workflows": { "type": "array", "items": { "$ref": "#/definitions/productWorkflow" } },
+            "useCases": { "type": "array", "items": { "$ref": "#/definitions/productUseCase" } },
+            "roleChapters": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/productRoleChapter" } }
+          },
+          "required": ["service", "module", "overview", "features", "workflows", "useCases", "roleChapters"]
+        } }
+      },
+      "required": ["version", "services"]
+    },
+    "productBusinessKey": {
+      "type": "string", "minLength": 1, "maxLength": 100,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "productReviewedText": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "text": { "$ref": "#/definitions/productText" },
+        "reviewed": { "type": "array", "minItems": 1, "maxItems": 1000, "items": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "object": { "$ref": "#/definitions/id" },
+            "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+          }, "required": ["object", "sha256"]
+        } }
+      }, "required": ["text", "reviewed"]
+    },
+    "productGroupV2": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "title": { "$ref": "#/definitions/productText" },
+        "summary": { "$ref": "#/definitions/productReviewedText" },
+        "fields": { "type": "array", "items": { "$ref": "#/definitions/productText" } },
+        "rules": { "type": "array", "items": { "$ref": "#/definitions/productText" } },
+        "sources": { "allOf": [{ "$ref": "#/definitions/ids" }], "minItems": 1 },
+        "questions": { "$ref": "#/definitions/ids" }
+      }, "required": ["id", "title", "summary", "sources"]
+    },
+    "productPageV2": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "interface": { "$ref": "#/definitions/id" },
+        "variant": { "$ref": "#/definitions/id" },
+        "groups": { "type": "array", "items": { "$ref": "#/definitions/productGroupV2" } },
+        "questions": { "$ref": "#/definitions/ids" }
+      }, "required": ["id", "interface", "groups"]
+    },
+    "productActionV2": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "activity": { "$ref": "#/definitions/id" },
+        "performer": { "enum": ["user", "system", "external"] },
+        "summary": { "$ref": "#/definitions/productReviewedText" },
+        "pages": { "type": "array", "maxItems": 1000, "items": { "$ref": "#/definitions/productPageV2" } },
+        "groups": { "type": "array", "items": { "$ref": "#/definitions/productGroupV2" } },
+        "questions": { "$ref": "#/definitions/ids" }
+      }, "required": ["id", "activity", "performer", "summary", "pages", "groups"]
+    },
+    "productFeatureV2": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "key": { "$ref": "#/definitions/productBusinessKey" },
+        "title": { "$ref": "#/definitions/productText" },
+        "service": { "$ref": "#/definitions/id" },
+        "status": { "enum": ["catalog-only", "detailed"] },
+        "summary": { "$ref": "#/definitions/productReviewedText" },
+        "question": { "$ref": "#/definitions/id" },
+        "workflow": { "$ref": "#/definitions/productWorkflow" },
+        "standard": { "$ref": "#/definitions/standardFeatureV1" },
+        "actions": { "type": "array", "minItems": 1, "maxItems": 1000, "items": { "$ref": "#/definitions/productActionV2" } }
+      },
+      "required": ["id", "key", "title", "service", "status"],
+      "oneOf": [
+        { "properties": { "status": { "const": "catalog-only" } }, "required": ["question"], "not": { "anyOf": [{ "required": ["workflow"] }, { "required": ["actions"] }] } },
+        { "properties": { "status": { "const": "detailed" } }, "required": ["summary", "workflow", "actions"], "not": { "required": ["question"] } }
+      ]
+    },
+    "productDocumentV2": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "version": { "const": 2 },
+        "key": { "$ref": "#/definitions/productBusinessKey" },
+        "language": { "type": "string", "minLength": 2, "maxLength": 35, "pattern": "^[a-z]{2,8}(-[a-z0-9]{1,8})*$" },
+        "standard": { "$ref": "#/definitions/standardDocumentV1" },
+        "modules": { "type": "array", "minItems": 1, "maxItems": 1000, "items": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "id": { "$ref": "#/definitions/id" }, "title": { "$ref": "#/definitions/productText" },
+            "subModules": { "type": "array", "minItems": 1, "maxItems": 1000, "items": {
+              "type": "object", "additionalProperties": false,
+              "properties": {
+                "id": { "$ref": "#/definitions/id" }, "title": { "$ref": "#/definitions/productText" },
+                "features": { "type": "array", "minItems": 1, "maxItems": 1000, "items": { "$ref": "#/definitions/productFeatureV2" } }
+              }, "required": ["id", "title", "features"]
+            } }
+          }, "required": ["id", "title", "subModules"]
+        } }
+      }, "required": ["version", "key", "language", "modules"],
+      "allOf": [{
+        "if": { "required": ["standard"] },
+        "then": { "properties": { "modules": { "items": { "properties": { "subModules": { "items": { "properties": { "features": { "items": { "required": ["standard"] } } } } } } } } } },
+        "else": { "properties": { "modules": { "items": { "properties": { "subModules": { "items": { "properties": { "features": { "items": { "not": { "required": ["standard"] } } } } } } } } } } }
+      }]
+    },
+    "standardFactV1": {
+      "description": "Reviewed audience-specific text or an explicitly scoped modeled question; a gap is never a guessed value.",
+      "oneOf": [
+        { "$ref": "#/definitions/productReviewedText" },
+        { "type": "object", "additionalProperties": false, "properties": { "question": { "$ref": "#/definitions/id" } }, "required": ["question"] }
+      ]
+    },
+    "standardFactsV1": { "type": "array", "minItems": 1, "maxItems": 1000, "items": { "$ref": "#/definitions/standardFactV1" } },
+    "standardDocumentV1": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "version": { "const": 1 }, "title": { "$ref": "#/definitions/standardFactV1" },
+        "authors": { "$ref": "#/definitions/standardFactsV1" }, "reviewers": { "$ref": "#/definitions/standardFactsV1" },
+        "startDate": { "$ref": "#/definitions/standardFactV1" }, "documentVersion": { "$ref": "#/definitions/standardFactV1" },
+        "background": { "$ref": "#/definitions/standardFactV1" },
+        "objectives": { "type": "array", "minItems": 3, "maxItems": 6, "items": { "type": "object", "additionalProperties": false, "properties": { "goal": { "$ref": "#/definitions/standardFactV1" }, "meaning": { "$ref": "#/definitions/standardFactV1" } }, "required": ["goal", "meaning"] } },
+        "glossary": { "type": "array", "maxItems": 1000, "items": { "type": "object", "additionalProperties": false, "properties": { "term": { "$ref": "#/definitions/standardFactV1" }, "definition": { "$ref": "#/definitions/standardFactV1" } }, "required": ["term", "definition"] } },
+        "roles": { "type": "array", "maxItems": 1000, "items": { "type": "object", "additionalProperties": false, "properties": { "role": { "$ref": "#/definitions/id" }, "purpose": { "$ref": "#/definitions/standardFactV1" }, "permissions": { "$ref": "#/definitions/standardFactV1" }, "restrictions": { "$ref": "#/definitions/standardFactV1" } }, "required": ["role", "purpose", "permissions", "restrictions"] } },
+        "sharedRules": { "type": "array", "maxItems": 1000, "items": { "type": "object", "additionalProperties": false, "properties": { "rule": { "$ref": "#/definitions/id" }, "description": { "$ref": "#/definitions/standardFactV1" } }, "required": ["rule", "description"] } },
+        "history": { "type": "array", "minItems": 1, "maxItems": 1000, "items": { "$ref": "#/definitions/standardReleaseV1" } }
+      }, "required": ["version", "title", "authors", "reviewers", "startDate", "documentVersion", "background", "objectives", "roles", "sharedRules", "history"]
+    },
+    "standardReleaseV1": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "version": { "$ref": "#/definitions/productText" }, "date": { "$ref": "#/definitions/standardFactV1" },
+        "change": { "$ref": "#/definitions/standardFactV1" }, "author": { "$ref": "#/definitions/standardFactV1" },
+        "released": { "type": "boolean" }, "references": { "type": "array", "maxItems": 1000, "items": { "$ref": "#/definitions/standardFactV1" } },
+        "chapters": { "type": "array", "maxItems": 1000, "items": { "type": "object", "additionalProperties": false, "properties": { "feature": { "$ref": "#/definitions/id" }, "summary": { "$ref": "#/definitions/standardFactV1" } }, "required": ["feature", "summary"] } }
+      }, "required": ["version", "date", "change", "author", "released", "references", "chapters"]
+    },
+    "standardFeatureV1": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "priority": { "oneOf": [{ "enum": ["P0", "P1", "P2"] }, { "type": "object", "additionalProperties": false, "properties": { "question": { "$ref": "#/definitions/id" } }, "required": ["question"] }] },
+        "readiness": { "oneOf": [{ "enum": ["High", "Medium", "Low"] }, { "type": "object", "additionalProperties": false, "properties": { "question": { "$ref": "#/definitions/id" } }, "required": ["question"] }] },
+        "featureDescription": { "$ref": "#/definitions/standardFactV1" }, "note": { "$ref": "#/definitions/standardFactV1" },
+        "changes": { "type": "array", "maxItems": 1000, "items": { "type": "object", "additionalProperties": false, "properties": { "version": { "$ref": "#/definitions/productText" }, "references": { "$ref": "#/definitions/standardFactsV1" }, "items": { "$ref": "#/definitions/standardFactsV1" } }, "required": ["version", "references", "items"] } },
+        "sections": { "type": "array", "minItems": 8, "maxItems": 8, "items": [
+          { "$ref": "#/definitions/standardDescriptionV1" }, { "$ref": "#/definitions/standardPreconditionsV1" },
+          { "$ref": "#/definitions/standardPostconditionsV1" }, { "$ref": "#/definitions/standardWorkflowV1" },
+          { "$ref": "#/definitions/standardPrototypeV1" }, { "$ref": "#/definitions/standardIntegrationsV1" },
+          { "$ref": "#/definitions/standardSecurityV1" }, { "$ref": "#/definitions/standardAcceptanceV1" }
+        ], "additionalItems": false }
+      }, "required": ["priority", "readiness", "featureDescription", "note", "changes", "sections"]
+    },
+    "standardDescriptionV1": { "type": "object", "additionalProperties": false, "properties": { "section": { "const": "Description" }, "content": { "$ref": "#/definitions/standardFactV1" } }, "required": ["section", "content"] },
+    "standardPreconditionsV1": { "type": "object", "additionalProperties": false, "properties": { "section": { "const": "Preconditions" }, "conditions": { "$ref": "#/definitions/standardFactsV1" } }, "required": ["section", "conditions"] },
+    "standardPostconditionsV1": { "type": "object", "additionalProperties": false, "properties": { "section": { "const": "Postconditions" }, "success": { "$ref": "#/definitions/standardFactsV1" }, "rejection": { "$ref": "#/definitions/standardFactsV1" }, "cancellation": { "$ref": "#/definitions/standardFactsV1" }, "failure": { "$ref": "#/definitions/standardFactsV1" } }, "required": ["section", "success", "rejection", "cancellation", "failure"] },
+    "standardWorkflowV1": {
+      "type": "object", "additionalProperties": false,
+      "properties": { "section": { "const": "Role based workflow map" },
+        "steps": { "type": "array", "maxItems": 1000, "items": { "$ref": "#/definitions/standardStepV1" } },
+        "question": { "$ref": "#/definitions/id" }, "statusModel": { "$ref": "#/definitions/standardStatusV1" }
+      }, "required": ["section", "steps", "statusModel"],
+      "allOf": [{ "if": { "properties": { "steps": { "maxItems": 0 } }, "required": ["steps"] }, "then": { "required": ["question"] } }]
+    },
+    "standardStepV1": {
+      "type": "object", "additionalProperties": false,
+      "properties": { "number": { "type": "string", "pattern": "^[1-9][0-9]*[a-z]?$" }, "node": { "$ref": "#/definitions/id" }, "activity": { "$ref": "#/definitions/id" }, "role": { "$ref": "#/definitions/id" }, "block": { "type": "string", "pattern": "^[SP][1-9][0-9]*$" }, "action": { "$ref": "#/definitions/standardFactV1" }, "response": { "$ref": "#/definitions/standardFactV1" }, "rules": { "$ref": "#/definitions/standardFactsV1" }, "businessRules": { "$ref": "#/definitions/standardBusinessRuleRefsV1" } },
+      "required": ["number", "node", "activity", "role", "block", "action", "response", "rules", "businessRules"]
+    },
+    "standardStatusV1": {
+      "type": "object", "additionalProperties": false,
+      "properties": { "completeness": { "enum": ["complete", "incomplete"] }, "question": { "$ref": "#/definitions/id" },
+        "states": { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": { "state": { "$ref": "#/definitions/id" }, "meaning": { "$ref": "#/definitions/standardFactV1" }, "initial": { "type": "boolean" } }, "required": ["state", "meaning", "initial"] } },
+        "transitions": { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": { "transition": { "$ref": "#/definitions/id" }, "from": { "$ref": "#/definitions/id" }, "to": { "$ref": "#/definitions/id" }, "step": { "type": "string", "pattern": "^[1-9][0-9]*[a-z]?$" }, "role": { "$ref": "#/definitions/id" }, "action": { "$ref": "#/definitions/standardFactV1" } }, "required": ["transition", "from", "to", "step", "role", "action"] } }
+      }, "required": ["completeness", "states", "transitions"],
+      "allOf": [{ "if": { "properties": { "completeness": { "const": "incomplete" } }, "required": ["completeness"] }, "then": { "required": ["question"] }, "else": { "not": { "required": ["question"] } } }]
+    },
+    "standardPrototypeV1": {
+      "type": "object", "additionalProperties": false,
+      "properties": { "section": { "const": "Prototype with UI elements & rules" }, "screens": { "type": "array", "items": { "$ref": "#/definitions/standardScreenV1" } }, "processes": { "type": "array", "items": { "$ref": "#/definitions/standardProcessV1" } }, "businessRules": { "type": "array", "items": { "$ref": "#/definitions/standardBusinessRuleV1" } } }, "required": ["section", "screens", "processes", "businessRules"]
+    },
+    "standardScreenV1": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "properties": { "kind": { "const": "screen" }, "id": { "type": "string", "pattern": "^S[1-9][0-9]*$" }, "page": { "$ref": "#/definitions/id" }, "interface": { "$ref": "#/definitions/id" }, "variant": { "$ref": "#/definitions/id" }, "design": { "$ref": "#/definitions/standardFactV1" }, "assets": { "$ref": "#/definitions/ids" }, "elements": { "$ref": "#/definitions/ids" }, "pageRules": { "$ref": "#/definitions/standardFactsV1" }, "fields": { "type": "array", "items": { "oneOf": [{ "$ref": "#/definitions/standardFieldV1" }, { "$ref": "#/definitions/standardFieldGapV1" }] } }, "actionMatrix": { "type": "array", "items": { "$ref": "#/definitions/standardActionMatrixRowV1" } }, "buttons": { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": { "element": { "$ref": "#/definitions/id" }, "action": { "$ref": "#/definitions/id" }, "visibility": { "$ref": "#/definitions/standardFactV1" }, "enabled": { "$ref": "#/definitions/standardFactV1" }, "behavior": { "$ref": "#/definitions/standardFactV1" } }, "required": ["element", "visibility", "enabled", "behavior"] } }, "messages": { "$ref": "#/definitions/standardFactsV1" } }, "required": ["kind", "id", "page", "interface", "design", "assets", "elements", "pageRules", "fields", "buttons", "messages"] },
+        { "type": "object", "additionalProperties": false, "properties": { "kind": { "const": "missing-screen" }, "id": { "type": "string", "pattern": "^S[1-9][0-9]*$" }, "question": { "$ref": "#/definitions/id" } }, "required": ["kind", "id", "question"] }
+      ]
+    },
+    "standardFieldGapV1": {
+      "type": "object", "additionalProperties": false,
+      "properties": { "element": { "$ref": "#/definitions/id" }, "question": { "$ref": "#/definitions/id" } },
+      "required": ["element", "question"]
+    },
+    "standardActionMatrixRowV1": {
+      "type": "object", "additionalProperties": false,
+      "properties": { "state": { "$ref": "#/definitions/id" }, "role": { "$ref": "#/definitions/id" }, "actions": { "$ref": "#/definitions/ids" }, "condition": { "$ref": "#/definitions/standardFactV1" } },
+      "required": ["state", "role", "actions"]
+    },
+    "standardBusinessRuleRefsV1": {
+      "type": "array", "uniqueItems": true, "items": { "oneOf": [
+        { "type": "string", "pattern": "^BR-[1-9][0-9]*$" },
+        { "type": "object", "additionalProperties": false, "properties": { "feature": { "$ref": "#/definitions/id" }, "id": { "type": "string", "pattern": "^BR-[1-9][0-9]*$" } }, "required": ["feature", "id"] }
+      ] }
+    },
+    "standardFieldV1": {
+      "type": "object", "additionalProperties": false,
+      "properties": { "field": { "$ref": "#/definitions/id" }, "binding": { "$ref": "#/definitions/id" },
+        "dataType": { "oneOf": [{ "enum": ["Text", "Text (bilingual EN/AR)", "Long text", "Number", "Amount", "Percentage", "Date", "Date-time", "Dropdown (single)", "Dropdown (multi)", "Lookup", "Checkbox", "Toggle (Yes/No)", "Attachment", "ID", "Calculated"] }, { "type": "object", "additionalProperties": false, "properties": { "question": { "$ref": "#/definitions/id" } }, "required": ["question"] }] },
+        "typeDetails": { "$ref": "#/definitions/standardFactV1" },
+        "required": { "oneOf": [{ "enum": ["Yes", "No", "Conditional"] }, { "type": "object", "additionalProperties": false, "properties": { "question": { "$ref": "#/definitions/id" } }, "required": ["question"] }] },
+        "default": { "$ref": "#/definitions/standardFactV1" }, "rules": { "$ref": "#/definitions/standardFactV1" }, "source": { "$ref": "#/definitions/standardFactV1" }, "editableWhen": { "$ref": "#/definitions/standardFactV1" }, "businessRules": { "$ref": "#/definitions/standardBusinessRuleRefsV1" }
+      }, "required": ["field", "binding", "dataType", "typeDetails", "required", "default", "rules", "source", "editableWhen", "businessRules"]
+    },
+    "standardProcessV1": {
+      "type": "object", "additionalProperties": false,
+      "properties": { "id": { "type": "string", "pattern": "^P[1-9][0-9]*$" }, "title": { "$ref": "#/definitions/standardFactV1" }, "trigger": { "$ref": "#/definitions/standardFactV1" }, "input": { "$ref": "#/definitions/standardFactV1" }, "processing": { "$ref": "#/definitions/standardFactV1" }, "output": { "$ref": "#/definitions/standardFactV1" }, "exceptions": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "properties": { "id": { "$ref": "#/definitions/id" }, "description": { "$ref": "#/definitions/standardFactV1" } }, "required": ["id", "description"] } }, "volumeTiming": { "$ref": "#/definitions/standardFactV1" }, "humanCheckpoint": { "$ref": "#/definitions/standardFactV1" }, "integrations": { "$ref": "#/definitions/ids" }, "notifications": { "$ref": "#/definitions/ids" }, "businessRules": { "$ref": "#/definitions/standardBusinessRuleRefsV1" } },
+      "required": ["id", "title", "trigger", "input", "processing", "output", "exceptions", "volumeTiming", "humanCheckpoint", "integrations", "notifications", "businessRules"]
+    },
+    "standardBusinessRuleV1": {
+      "type": "object", "additionalProperties": false,
+      "properties": { "id": { "type": "string", "pattern": "^BR-[1-9][0-9]*$" }, "rule": { "$ref": "#/definitions/id" }, "name": { "$ref": "#/definitions/standardFactV1" }, "steps": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^[1-9][0-9]*[a-z]?$" } }, "bindings": { "$ref": "#/definitions/ids" }, "appliesTo": { "$ref": "#/definitions/standardFactV1" }, "inputs": { "$ref": "#/definitions/standardFactV1" }, "logic": { "$ref": "#/definitions/standardFactV1" }, "unitsRounding": { "$ref": "#/definitions/standardFactV1" }, "boundaries": { "$ref": "#/definitions/standardFactV1" }, "workedExample": { "$ref": "#/definitions/standardFactV1" } },
+      "required": ["id", "rule", "name", "steps", "bindings", "appliesTo", "inputs", "logic", "unitsRounding", "boundaries", "workedExample"]
+    },
+    "standardIntegrationsV1": {
+      "type": "object", "additionalProperties": false,
+      "properties": { "section": { "const": "Integration points" }, "integrations": { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": { "integration": { "$ref": "#/definitions/id" }, "direction": { "$ref": "#/definitions/standardFactV1" }, "trigger": { "$ref": "#/definitions/standardFactV1" }, "data": { "$ref": "#/definitions/standardFactV1" }, "timing": { "$ref": "#/definitions/standardFactV1" }, "failure": { "$ref": "#/definitions/standardFactV1" } }, "required": ["integration", "direction", "trigger", "data", "timing", "failure"] } },
+        "notifications": { "type": "array", "items": { "type": "object", "additionalProperties": false, "properties": { "id": { "$ref": "#/definitions/id" }, "event": { "$ref": "#/definitions/standardFactV1" }, "channel": { "$ref": "#/definitions/standardFactV1" }, "recipient": { "$ref": "#/definitions/standardFactV1" }, "roles": { "$ref": "#/definitions/ids" }, "integration": { "$ref": "#/definitions/id" } }, "required": ["id", "event", "channel", "recipient", "roles"] } }, "none": { "$ref": "#/definitions/standardFactV1" }
+      }, "required": ["section", "integrations", "notifications"]
+    },
+    "standardSecurityV1": { "type": "object", "additionalProperties": false, "properties": { "section": { "const": "Audit & Security" }, "audit": { "$ref": "#/definitions/standardFactsV1" }, "access": { "$ref": "#/definitions/standardFactsV1" }, "integrity": { "$ref": "#/definitions/standardFactsV1" } }, "required": ["section", "audit", "access", "integrity"] },
+    "standardAcceptanceV1": {
+      "type": "object", "additionalProperties": false,
+      "properties": { "section": { "const": "Acceptance Criteria" }, "criteria": { "type": "array", "minItems": 1, "items": { "type": "object", "additionalProperties": false, "properties": { "id": { "$ref": "#/definitions/id" }, "observation": { "$ref": "#/definitions/standardFactV1" }, "sources": { "$ref": "#/definitions/ids" }, "steps": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^[1-9][0-9]*[a-z]?$" } }, "blocks": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^[SP][1-9][0-9]*$" } }, "businessRules": { "$ref": "#/definitions/standardBusinessRuleRefsV1" }, "transitions": { "$ref": "#/definitions/ids" }, "processExceptions": { "$ref": "#/definitions/ids" }, "coverage": { "type": "array", "uniqueItems": true, "items": { "enum": ["path", "field", "process-trigger", "process-output", "process-exception", "rule-example", "integration", "access", "audit", "integrity"] } } }, "required": ["id", "observation", "sources", "steps", "blocks", "businessRules", "transitions", "processExceptions", "coverage"] } } }, "required": ["section", "criteria"]
+    },
+    "bindingPredicate": {
+      "oneOf": [
+        { "$ref": "#/definitions/predicate" },
+        { "type": "object", "additionalProperties": false, "properties": { "question": { "$ref": "#/definitions/id" } }, "required": ["question"] }
+      ]
+    },
+    "predicate": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "constant": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "constant"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "field": {
+              "$ref": "#/definitions/id"
+            },
+            "op": {
+              "enum": [
+                "eq",
+                "ne",
+                "lt",
+                "le",
+                "gt",
+                "ge"
+              ]
+            },
+            "value": {
+              "type": [
+                "string",
+                "number",
+                "boolean",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "field",
+            "op",
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "all": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "$ref": "#/definitions/predicate"
+              }
+            }
+          },
+          "required": [
+            "all"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "any": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "$ref": "#/definitions/predicate"
+              }
+            }
+          },
+          "required": [
+            "any"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "not": {
+              "$ref": "#/definitions/predicate"
+            }
+          },
+          "required": [
+            "not"
+          ]
+        }
+      ]
+    },
+    "fact": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "value": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 10000,
+              "pattern": "\\S"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "gap": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 10000,
+              "pattern": "\\S"
+            }
+          },
+          "required": [
+            "gap"
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,1098 @@
+{
+  "schemaVersion": 1,
+  "objects": [
+    {
+      "id": "project",
+      "type": "project",
+      "title": "Community events",
+      "purpose": "Coordinate community events",
+      "status": "proposed",
+      "detail": {
+        "scope": "Community event reservations"
+      }
+    },
+    {
+      "id": "service",
+      "type": "service",
+      "title": "Reservations",
+      "purpose": "Reserve event places",
+      "status": "proposed",
+      "detail": {
+        "boundary": "Event reservations"
+      },
+      "parent": "project"
+    },
+    {
+      "id": "patron",
+      "type": "role",
+      "title": "Patron",
+      "purpose": "Choose events",
+      "status": "proposed",
+      "detail": {
+        "actorKind": "human"
+      }
+    },
+    {
+      "id": "librarian",
+      "type": "role",
+      "title": "Librarian",
+      "purpose": "Review reservations",
+      "status": "proposed",
+      "detail": {
+        "actorKind": "human"
+      }
+    },
+    {
+      "id": "choose",
+      "type": "activity",
+      "title": "Choose session",
+      "purpose": "Choose an available session",
+      "status": "proposed",
+      "detail": {
+        "actorKind": "human"
+      },
+      "parent": "service",
+      "refs": [
+        {
+          "relation": "actor",
+          "target": "patron",
+          "type": "role"
+        },
+        {
+          "relation": "uses",
+          "target": "list",
+          "type": "interface"
+        },
+        {
+          "relation": "variant",
+          "target": "open",
+          "type": "variant"
+        },
+        {
+          "relation": "next",
+          "target": "record",
+          "type": "activity"
+        }
+      ]
+    },
+    {
+      "id": "record",
+      "type": "activity",
+      "title": "Record reservation",
+      "purpose": "Store the reservation",
+      "status": "proposed",
+      "detail": {
+        "actorKind": "system"
+      },
+      "parent": "service",
+      "refs": [
+        {
+          "relation": "action",
+          "target": "save",
+          "type": "action"
+        },
+        {
+          "relation": "next",
+          "target": "review",
+          "type": "activity"
+        }
+      ]
+    },
+    {
+      "id": "review",
+      "type": "activity",
+      "title": "Review reservation",
+      "purpose": "Review the reservation",
+      "status": "proposed",
+      "detail": {
+        "actorKind": "human"
+      },
+      "parent": "service",
+      "refs": [
+        {
+          "relation": "actor",
+          "target": "librarian",
+          "type": "role"
+        },
+        {
+          "relation": "uses",
+          "target": "list",
+          "type": "interface"
+        },
+        {
+          "relation": "variant",
+          "target": "error",
+          "type": "variant"
+        },
+        {
+          "relation": "next",
+          "target": "choose",
+          "type": "activity"
+        }
+      ]
+    },
+    {
+      "id": "list",
+      "type": "interface",
+      "title": "Session list",
+      "purpose": "Show available sessions",
+      "status": "proposed",
+      "detail": {
+        "kind": "list"
+      }
+    },
+    {
+      "id": "dialog",
+      "type": "interface",
+      "title": "Reservation dialog",
+      "purpose": "Confirm a reservation",
+      "status": "proposed",
+      "detail": {
+        "kind": "dialog"
+      },
+      "assetIds": [
+        "planAsset"
+      ]
+    },
+    {
+      "id": "section",
+      "type": "section",
+      "title": "Reservation details",
+      "purpose": "Group controls",
+      "status": "proposed",
+      "detail": {},
+      "parent": "dialog"
+    },
+    {
+      "id": "open",
+      "type": "variant",
+      "title": "Open dialog",
+      "purpose": "Initial state",
+      "status": "proposed",
+      "detail": {
+        "kind": "dialog",
+        "predicate": {
+          "all": [
+            {
+              "constant": true
+            },
+            {
+              "field": "session",
+              "op": "ne",
+              "value": "unavailable"
+            }
+          ]
+        }
+      },
+      "parent": "dialog"
+    },
+    {
+      "id": "error",
+      "type": "variant",
+      "title": "Error dialog",
+      "purpose": "Error state",
+      "status": "proposed",
+      "detail": {
+        "kind": "state",
+        "predicate": {
+          "field": "session",
+          "op": "eq",
+          "value": "unavailable"
+        }
+      },
+      "parent": "dialog"
+    },
+    {
+      "id": "done",
+      "type": "variant",
+      "title": "Success dialog",
+      "purpose": "Success state",
+      "status": "proposed",
+      "detail": {
+        "kind": "state",
+        "predicate": {
+          "field": "session",
+          "op": "ne",
+          "value": "unavailable"
+        }
+      },
+      "parent": "dialog"
+    },
+    {
+      "id": "confirm",
+      "type": "element",
+      "title": "Confirm button",
+      "purpose": "Submit reservation",
+      "status": "proposed",
+      "detail": {
+        "kind": "button",
+        "behavior": "Confirm then submit"
+      },
+      "parent": "section",
+      "refs": [
+        {
+          "relation": "action",
+          "target": "save",
+          "type": "action"
+        },
+        {
+          "relation": "rule",
+          "target": "sessionRule",
+          "type": "rule"
+        }
+      ]
+    },
+    {
+      "id": "session",
+      "type": "field",
+      "title": "Session",
+      "purpose": "Identify the selected session",
+      "status": "proposed",
+      "detail": {
+        "dataType": "string",
+        "unit": "not applicable",
+        "precision": "not applicable"
+      },
+      "refs": [
+        {
+          "relation": "derivedFrom",
+          "target": "row",
+          "type": "source",
+          "locator": "row 1",
+          "quote": "chooses a session",
+          "interpretation": "The quoted source supports this object."
+        }
+      ]
+    },
+    {
+      "id": "chooseBinding",
+      "type": "binding",
+      "title": "Session selection",
+      "purpose": "Bind session in choice",
+      "status": "proposed",
+      "detail": {
+        "visibility": {
+          "constant": true
+        },
+        "editable": {
+          "constant": true
+        },
+        "required": {
+          "constant": true
+        }
+      },
+      "parent": "choose",
+      "refs": [
+        {
+          "relation": "field",
+          "target": "session",
+          "type": "field"
+        },
+        {
+          "relation": "rule",
+          "target": "sessionRule",
+          "type": "rule"
+        }
+      ]
+    },
+    {
+      "id": "reviewBinding",
+      "type": "binding",
+      "title": "Session review",
+      "purpose": "Bind session in review",
+      "status": "proposed",
+      "detail": {
+        "visibility": {
+          "constant": true
+        },
+        "editable": {
+          "constant": false
+        },
+        "required": {
+          "constant": true
+        }
+      },
+      "parent": "review",
+      "refs": [
+        {
+          "relation": "field",
+          "target": "session",
+          "type": "field"
+        },
+        {
+          "relation": "rule",
+          "target": "sessionRule",
+          "type": "rule"
+        }
+      ]
+    },
+    {
+      "id": "sessionRule",
+      "type": "rule",
+      "title": "Session requirement",
+      "purpose": "Require an available session",
+      "status": "proposed",
+      "detail": {},
+      "rule": {
+        "scope": [
+          "choose",
+          "review"
+        ],
+        "condition": {
+          "field": "session",
+          "op": "ne",
+          "value": ""
+        },
+        "effect": "A session is required",
+        "unit": "not applicable",
+        "precision": "not applicable",
+        "time": "at confirmation",
+        "exceptions": [
+          {
+            "scope": [
+              "review"
+            ],
+            "condition": {
+              "field": "session",
+              "op": "eq",
+              "value": "unavailable"
+            },
+            "effect": "Show the error state"
+          }
+        ]
+      },
+      "refs": [
+        {
+          "relation": "derivedFrom",
+          "target": "row",
+          "type": "source",
+          "locator": "row 1",
+          "quote": "chooses a session",
+          "interpretation": "The quoted source supports this object."
+        }
+      ]
+    },
+    {
+      "id": "save",
+      "type": "action",
+      "title": "Save reservation",
+      "purpose": "Record the selection",
+      "status": "proposed",
+      "detail": {
+        "contracts": {
+          "actor": {
+            "value": "Librarian initiates publication"
+          },
+          "permission": {
+            "gap": "Permission owner not confirmed"
+          },
+          "input": {
+            "value": "Reminder text and event ID"
+          },
+          "output": {
+            "value": "Publication receipt"
+          },
+          "guard": {
+            "value": "Event must be scheduled"
+          },
+          "stateEffects": {
+            "value": "Reminder changes from draft to published"
+          },
+          "errors": {
+            "value": "Reject unscheduled events and report delivery failure"
+          },
+          "audit": {
+            "value": "Record actor, event and time"
+          },
+          "idempotency": {
+            "value": "One publication per event and request key"
+          },
+          "concurrency": {
+            "value": "Compare event revision before publication"
+          },
+          "transaction": {
+            "value": "Commit publication and audit together"
+          },
+          "batch": {
+            "value": "Only one event per request; no batch operation"
+          },
+          "externalEffects": {
+            "value": "Send the reminder to the local notice queue"
+          }
+        }
+      },
+      "refs": [
+        {
+          "relation": "derivedFrom",
+          "target": "row",
+          "type": "source",
+          "locator": "row 1",
+          "quote": "records the reservation",
+          "interpretation": "The quoted source supports this object."
+        },
+        {
+          "relation": "acceptance",
+          "target": "success",
+          "type": "acceptance"
+        },
+        {
+          "relation": "acceptance",
+          "target": "failure",
+          "type": "acceptance"
+        },
+        {
+          "relation": "acceptance",
+          "target": "cancel",
+          "type": "acceptance"
+        }
+      ]
+    },
+    {
+      "id": "success",
+      "type": "acceptance",
+      "title": "Success",
+      "purpose": "Confirm reservation",
+      "status": "proposed",
+      "detail": {
+        "scenario": "Available session",
+        "outcome": "success",
+        "expected": "Reservation recorded"
+      }
+    },
+    {
+      "id": "failure",
+      "type": "acceptance",
+      "title": "Error",
+      "purpose": "Describe failure",
+      "status": "proposed",
+      "detail": {
+        "scenario": "Unavailable session",
+        "outcome": "error",
+        "expected": "Error displayed"
+      }
+    },
+    {
+      "id": "cancel",
+      "type": "acceptance",
+      "title": "Cancel",
+      "purpose": "Leave without saving",
+      "status": "proposed",
+      "detail": {
+        "scenario": "Cancel confirmation",
+        "outcome": "cancel",
+        "expected": "No reservation saved"
+      }
+    },
+    {
+      "id": "row",
+      "type": "source",
+      "title": "Original record",
+      "purpose": "Preserve the original",
+      "status": "reference",
+      "detail": {},
+      "source": {
+        "recordKey": "row",
+        "text": "A patron chooses a session and confirms a reservation; the system records the reservation.",
+        "locator": "row 1",
+        "version": "1",
+        "sha256": "9fc087692538104a7af8d3b949c68e06ee8062629665114f0f9a5051c8fd8090"
+      }
+    },
+    {
+      "id": "observation",
+      "type": "evidence",
+      "title": "Source observation",
+      "purpose": "Record what the row states",
+      "status": "reference",
+      "detail": {
+        "scope": [
+          "session"
+        ],
+        "interpretation": "The source describes a session choice.",
+        "confidence": "observed"
+      },
+      "refs": [
+        {
+          "relation": "target",
+          "target": "session",
+          "type": "field"
+        },
+        {
+          "relation": "derivedFrom",
+          "target": "row",
+          "type": "source",
+          "locator": "row 1",
+          "quote": "chooses a session",
+          "interpretation": "The quoted source supports this object."
+        }
+      ]
+    },
+    {
+      "id": "question",
+      "type": "question",
+      "title": "Who can reserve?",
+      "purpose": "Resolve permission",
+      "status": "proposed",
+      "detail": {
+        "scope": [
+          "save"
+        ],
+        "consequence": "Cannot authorize save",
+        "options": [
+          "Patron",
+          "Librarian"
+        ],
+        "assumptions": [],
+        "confirmingFunction": "Event owner",
+        "blocking": true
+      },
+      "refs": [
+        {
+          "relation": "target",
+          "target": "save",
+          "type": "action"
+        },
+        {
+          "relation": "derivedFrom",
+          "target": "row",
+          "type": "source",
+          "locator": "row 1",
+          "quote": "confirms a reservation",
+          "interpretation": "The quoted source supports this object."
+        }
+      ]
+    },
+    {
+      "id": "extra",
+      "type": "extension",
+      "title": "Unmapped note",
+      "purpose": "Retain additional wording",
+      "status": "proposed",
+      "detail": {},
+      "content": "The system records the reservation.",
+      "refs": [
+        {
+          "relation": "derivedFrom",
+          "target": "row",
+          "type": "source",
+          "locator": "row 1",
+          "quote": "the system records the reservation",
+          "interpretation": "The quoted source supports this object."
+        }
+      ]
+    },
+    {
+      "id": "readyAction",
+      "type": "action",
+      "title": "Publish reminder",
+      "purpose": "Publish a reminder",
+      "status": "customer-confirmed",
+      "detail": {
+        "contracts": {
+          "actor": {
+            "value": "Librarian initiates publication"
+          },
+          "permission": {
+            "value": "Only event librarians may publish"
+          },
+          "input": {
+            "value": "Reminder text and event ID"
+          },
+          "output": {
+            "value": "Publication receipt"
+          },
+          "guard": {
+            "value": "Event must be scheduled"
+          },
+          "stateEffects": {
+            "value": "Reminder changes from draft to published"
+          },
+          "errors": {
+            "value": "Reject unscheduled events and report delivery failure"
+          },
+          "audit": {
+            "value": "Record actor, event and time"
+          },
+          "idempotency": {
+            "value": "One publication per event and request key"
+          },
+          "concurrency": {
+            "value": "Compare event revision before publication"
+          },
+          "transaction": {
+            "value": "Commit publication and audit together"
+          },
+          "batch": {
+            "value": "Only one event per request; no batch operation"
+          },
+          "externalEffects": {
+            "value": "Send the reminder to the local notice queue"
+          }
+        }
+      },
+      "refs": [
+        {
+          "relation": "actor",
+          "target": "librarian",
+          "type": "role"
+        },
+        {
+          "relation": "acceptance",
+          "target": "readyCase",
+          "type": "acceptance"
+        },
+        {
+          "relation": "decision",
+          "target": "readyDecision",
+          "type": "decision"
+        }
+      ]
+    },
+    {
+      "id": "readyCase",
+      "type": "acceptance",
+      "title": "Reminder success",
+      "purpose": "Verify publication",
+      "status": "customer-confirmed",
+      "detail": {
+        "scenario": "Reminder is eligible",
+        "outcome": "success",
+        "expected": "Reminder is published"
+      },
+      "refs": [
+        {
+          "relation": "decision",
+          "target": "readyDecision",
+          "type": "decision"
+        }
+      ]
+    },
+    {
+      "id": "readySource",
+      "type": "source",
+      "title": "Original record",
+      "purpose": "Preserve the original",
+      "status": "reference",
+      "detail": {},
+      "source": {
+        "recordKey": "readySource",
+        "text": "The event owner confirms the reminder publication and success case.",
+        "locator": "row 1",
+        "version": "1",
+        "sha256": "3b5699e06f59c268517df87b9da9f394a979061037ff820209a78a82b97e90f9"
+      }
+    },
+    {
+      "id": "readyDecision",
+      "type": "decision",
+      "title": "Reminder confirmation",
+      "purpose": "Record the synthetic confirmation",
+      "status": "customer-confirmed",
+      "detail": {
+        "scope": [
+          "readyAction",
+          "readyCase"
+        ],
+        "authority": "Event owner",
+        "meeting": {
+          "date": "2026-01-01",
+          "participants": [
+            "Event owner"
+          ],
+          "record": "Synthetic meeting record"
+        }
+      },
+      "refs": [
+        {
+          "relation": "derivedFrom",
+          "target": "readySource",
+          "type": "source",
+          "locator": "row 1",
+          "quote": "confirms the reminder publication and success case",
+          "interpretation": "The quoted source supports this object."
+        }
+      ]
+    }
+  ],
+  "profile": {
+    "id": "profile",
+    "version": "1",
+    "components": [
+      {
+        "id": "component0",
+        "version": 1,
+        "type": "control",
+        "heading": "control",
+        "selector": {
+          "types": [
+            "project",
+            "document",
+            "revision"
+          ]
+        },
+        "requiredWhen": "selected",
+        "gapPolicy": "include",
+        "clientProjection": "include",
+        "outputs": [
+          "workspace",
+          "document"
+        ]
+      },
+      {
+        "id": "component1",
+        "version": 1,
+        "type": "overview",
+        "heading": "overview",
+        "selector": {
+          "types": [
+            "project",
+            "service"
+          ]
+        },
+        "requiredWhen": "selected",
+        "gapPolicy": "include",
+        "clientProjection": "include",
+        "outputs": [
+          "workspace",
+          "document"
+        ]
+      },
+      {
+        "id": "component2",
+        "version": 1,
+        "type": "capability-index",
+        "heading": "capability-index",
+        "selector": {
+          "types": [
+            "capability",
+            "taxonomy"
+          ]
+        },
+        "requiredWhen": "selected",
+        "gapPolicy": "include",
+        "clientProjection": "include",
+        "outputs": [
+          "workspace",
+          "document"
+        ]
+      },
+      {
+        "id": "component3",
+        "version": 1,
+        "type": "role-journey",
+        "heading": "role-journey",
+        "selector": {
+          "types": [
+            "role",
+            "journey",
+            "phase",
+            "activity"
+          ]
+        },
+        "requiredWhen": "selected",
+        "gapPolicy": "include",
+        "clientProjection": "include",
+        "outputs": [
+          "workspace",
+          "document"
+        ]
+      },
+      {
+        "id": "component4",
+        "version": 1,
+        "type": "process-view",
+        "heading": "process-view",
+        "selector": {
+          "types": [
+            "activity"
+          ]
+        },
+        "requiredWhen": "selected",
+        "gapPolicy": "include",
+        "clientProjection": "include",
+        "outputs": [
+          "workspace",
+          "document"
+        ]
+      },
+      {
+        "id": "component5",
+        "version": 1,
+        "type": "interface",
+        "heading": "interface",
+        "selector": {
+          "types": [
+            "interface",
+            "section",
+            "variant"
+          ]
+        },
+        "requiredWhen": "selected",
+        "gapPolicy": "include",
+        "clientProjection": "include",
+        "outputs": [
+          "workspace",
+          "document"
+        ]
+      },
+      {
+        "id": "component6",
+        "version": 1,
+        "type": "element-behavior",
+        "heading": "element-behavior",
+        "selector": {
+          "types": [
+            "element",
+            "binding",
+            "rule"
+          ]
+        },
+        "requiredWhen": "selected",
+        "gapPolicy": "include",
+        "clientProjection": "include",
+        "outputs": [
+          "workspace",
+          "document"
+        ]
+      },
+      {
+        "id": "component7",
+        "version": 1,
+        "type": "data-fields",
+        "heading": "data-fields",
+        "selector": {
+          "types": [
+            "field",
+            "binding",
+            "rule"
+          ]
+        },
+        "requiredWhen": "selected",
+        "gapPolicy": "include",
+        "clientProjection": "include",
+        "outputs": [
+          "workspace",
+          "document"
+        ]
+      },
+      {
+        "id": "component8",
+        "version": 1,
+        "type": "scenario",
+        "heading": "scenario",
+        "selector": {
+          "types": [
+            "acceptance",
+            "action"
+          ]
+        },
+        "requiredWhen": "selected",
+        "gapPolicy": "include",
+        "clientProjection": "include",
+        "outputs": [
+          "workspace",
+          "document"
+        ]
+      },
+      {
+        "id": "component9",
+        "version": 1,
+        "type": "lifecycle",
+        "heading": "lifecycle",
+        "selector": {
+          "types": [
+            "entity",
+            "state",
+            "transition"
+          ]
+        },
+        "requiredWhen": "selected",
+        "gapPolicy": "include",
+        "clientProjection": "include",
+        "outputs": [
+          "workspace",
+          "document"
+        ]
+      },
+      {
+        "id": "component10",
+        "version": 1,
+        "type": "integration",
+        "heading": "integration",
+        "selector": {
+          "types": [
+            "integration",
+            "api"
+          ]
+        },
+        "requiredWhen": "selected",
+        "gapPolicy": "include",
+        "clientProjection": "include",
+        "outputs": [
+          "workspace",
+          "document"
+        ]
+      },
+      {
+        "id": "component11",
+        "version": 1,
+        "type": "evidence",
+        "heading": "evidence",
+        "selector": {
+          "types": [
+            "source",
+            "evidence",
+            "decision",
+            "question",
+            "extension"
+          ]
+        },
+        "requiredWhen": "selected",
+        "gapPolicy": "include",
+        "clientProjection": "include",
+        "outputs": [
+          "workspace",
+          "document"
+        ]
+      },
+      {
+        "id": "component12",
+        "version": 1,
+        "type": "development-appendix",
+        "heading": "development-appendix",
+        "selector": {
+          "types": [
+            "action",
+            "api",
+            "integration",
+            "rule",
+            "acceptance"
+          ]
+        },
+        "requiredWhen": "selected",
+        "gapPolicy": "include",
+        "clientProjection": "include",
+        "outputs": [
+          "workspace",
+          "document"
+        ]
+      }
+    ]
+  },
+  "assets": [
+    {
+      "id": "planAsset",
+      "path": "event-plan.txt",
+      "name": "event-plan.txt",
+      "mediaType": "text/plain",
+      "sha256": "51158e7f6391955498df603f35067ac3b940546eadd40514a96a6864251497c6",
+      "distributable": true
+    }
+  ],
+  "nativeViews": [
+    {
+      "id": "workflowView",
+      "diagramType": "workflow",
+      "spec": {
+        "schema_version": 2,
+        "diagram_type": "workflow",
+        "meta": {
+          "title": "Event reservation workflow",
+          "locale": "en",
+          "output": "workflow.html"
+        },
+        "lanes": [
+          {
+            "id": "patronLane",
+            "label": "Patron"
+          },
+          {
+            "id": "staffLane",
+            "label": "Library staff"
+          }
+        ],
+        "nodes": [
+          {
+            "id": "chooseNode",
+            "lane": "patronLane",
+            "col": 0,
+            "type": "frontend",
+            "label": "Choose session"
+          },
+          {
+            "id": "recordNode",
+            "lane": "staffLane",
+            "col": 1,
+            "type": "backend",
+            "label": "Record reservation"
+          },
+          {
+            "id": "reviewNode",
+            "lane": "staffLane",
+            "col": 2,
+            "type": "backend",
+            "label": "Review reservation"
+          }
+        ],
+        "edges": [
+          {
+            "id": "choose-record",
+            "from": "chooseNode",
+            "to": "recordNode"
+          },
+          {
+            "id": "record-review",
+            "from": "recordNode",
+            "to": "reviewNode"
+          }
+        ]
+      },
+      "source": "row",
+      "anchor": {
+        "locator": "row 1",
+        "quote": "the system records the reservation"
+      },
+      "laneBindings": [
+        {
+          "lane": "patronLane",
+          "role": "patron"
+        },
+        {
+          "lane": "staffLane",
+          "role": "librarian"
+        }
+      ],
+      "bindings": [
+        {
+          "node": "chooseNode",
+          "object": "choose",
+          "type": "activity"
+        },
+        {
+          "node": "recordNode",
+          "object": "record",
+          "type": "activity"
+        },
+        {
+          "node": "reviewNode",
+          "object": "review",
+          "type": "activity"
+        }
+      ]
+    }
+  ],
+  "presentation": {
+    "camera": {
+      "x": 0,
+      "y": 0,
+      "zoom": 1
+    },
+    "positions": [
+      {
+        "object": "service",
+        "x": 10,
+        "y": 20
+      }
+    ]
+  }
+}

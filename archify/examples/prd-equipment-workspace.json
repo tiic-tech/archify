@@ -1,0 +1,766 @@
+{
+  "schemaVersion": 1,
+  "objects": [
+    {
+      "id": "project",
+      "type": "project",
+      "title": "Facilities",
+      "purpose": "Manage shared equipment",
+      "status": "proposed",
+      "detail": {
+        "scope": "Equipment loans"
+      }
+    },
+    {
+      "id": "loans",
+      "type": "service",
+      "title": "Equipment loans",
+      "purpose": "Manage equipment loans",
+      "status": "proposed",
+      "detail": {
+        "boundary": "Equipment borrowing"
+      },
+      "parent": "project"
+    },
+    {
+      "id": "borrower",
+      "type": "role",
+      "title": "Borrower",
+      "purpose": "Request equipment",
+      "status": "proposed",
+      "detail": {
+        "actorKind": "human"
+      }
+    },
+    {
+      "id": "staff",
+      "type": "role",
+      "title": "Staff",
+      "purpose": "Review requests",
+      "status": "proposed",
+      "detail": {
+        "actorKind": "human"
+      }
+    },
+    {
+      "id": "inventory",
+      "type": "role",
+      "title": "Inventory system",
+      "purpose": "Update inventory",
+      "status": "proposed",
+      "detail": {
+        "actorKind": "system"
+      }
+    },
+    {
+      "id": "request",
+      "type": "activity",
+      "title": "Request equipment",
+      "purpose": "Submit a request",
+      "status": "proposed",
+      "detail": {
+        "actorKind": "human"
+      },
+      "parent": "loans",
+      "refs": [
+        {
+          "relation": "actor",
+          "target": "borrower",
+          "type": "role"
+        },
+        {
+          "relation": "uses",
+          "target": "requestPage",
+          "type": "interface"
+        }
+      ]
+    },
+    {
+      "id": "review",
+      "type": "activity",
+      "title": "Review request",
+      "purpose": "Approve or return a request",
+      "status": "proposed",
+      "detail": {
+        "actorKind": "human"
+      },
+      "parent": "loans",
+      "refs": [
+        {
+          "relation": "actor",
+          "target": "staff",
+          "type": "role"
+        }
+      ]
+    },
+    {
+      "id": "record",
+      "type": "activity",
+      "title": "Record checkout",
+      "purpose": "Record the checkout",
+      "status": "proposed",
+      "detail": {
+        "actorKind": "system"
+      },
+      "parent": "loans",
+      "refs": [
+        {
+          "relation": "action",
+          "target": "recordAction",
+          "type": "action"
+        }
+      ]
+    },
+    {
+      "id": "return",
+      "type": "activity",
+      "title": "Return equipment",
+      "purpose": "Return equipment",
+      "status": "proposed",
+      "detail": {
+        "actorKind": "human"
+      },
+      "parent": "loans",
+      "refs": [
+        {
+          "relation": "actor",
+          "target": "borrower",
+          "type": "role"
+        }
+      ]
+    },
+    {
+      "id": "requestPage",
+      "type": "interface",
+      "title": "Request form",
+      "purpose": "Enter the loan request",
+      "status": "proposed",
+      "detail": {
+        "kind": "page"
+      }
+    },
+    {
+      "id": "item",
+      "type": "field",
+      "title": "Equipment",
+      "purpose": "Identify the requested equipment",
+      "status": "proposed",
+      "detail": {
+        "dataType": "string"
+      }
+    },
+    {
+      "id": "date",
+      "type": "field",
+      "title": "Return date",
+      "purpose": "Specify the expected return date",
+      "status": "proposed",
+      "detail": {
+        "dataType": "string"
+      }
+    },
+    {
+      "id": "itemInput",
+      "type": "binding",
+      "title": "Equipment selection",
+      "purpose": "Select equipment",
+      "status": "proposed",
+      "detail": {
+        "visibility": {
+          "constant": true
+        },
+        "editable": {
+          "constant": true
+        },
+        "required": {
+          "constant": true
+        }
+      },
+      "parent": "requestPage",
+      "refs": [
+        {
+          "relation": "field",
+          "target": "item",
+          "type": "field"
+        }
+      ]
+    },
+    {
+      "id": "dateInput",
+      "type": "binding",
+      "title": "Return date entry",
+      "purpose": "Enter the date",
+      "status": "proposed",
+      "detail": {
+        "visibility": {
+          "constant": true
+        },
+        "editable": {
+          "constant": true
+        },
+        "required": {
+          "field": "item",
+          "op": "eq",
+          "value": "temporary"
+        }
+      },
+      "parent": "requestPage",
+      "refs": [
+        {
+          "relation": "field",
+          "target": "date",
+          "type": "field"
+        },
+        {
+          "relation": "rule",
+          "target": "dateRule",
+          "type": "rule"
+        }
+      ]
+    },
+    {
+      "id": "dateRule",
+      "type": "rule",
+      "title": "Return date rule",
+      "purpose": "Check the requested date",
+      "status": "proposed",
+      "detail": {},
+      "rule": {
+        "scope": [
+          "requestPage"
+        ],
+        "condition": {
+          "field": "item",
+          "op": "eq",
+          "value": "temporary"
+        },
+        "effect": "Return date is required",
+        "unit": "Not specified",
+        "precision": "Not specified",
+        "time": "At request",
+        "exceptions": [
+          {
+            "scope": [
+              "requestPage"
+            ],
+            "condition": {
+              "field": "date",
+              "op": "eq",
+              "value": "unknown"
+            },
+            "effect": "Return the request for clarification"
+          }
+        ]
+      }
+    },
+    {
+      "id": "recordAction",
+      "type": "action",
+      "title": "Update inventory",
+      "purpose": "Record the checkout",
+      "status": "proposed",
+      "detail": {
+        "contracts": {
+          "stateEffects": {
+            "value": "Mark equipment as checked out"
+          },
+          "errors": {
+            "value": "Keep the request pending if inventory is unavailable"
+          }
+        }
+      },
+      "refs": [
+        {
+          "relation": "actor",
+          "target": "inventory",
+          "type": "role"
+        }
+      ]
+    },
+    {
+      "id": "operatorQuestion",
+      "type": "question",
+      "title": "Who assigns the operator?",
+      "purpose": "Clarify operator assignment",
+      "status": "proposed",
+      "detail": {
+        "scope": [
+          "loans"
+        ],
+        "consequence": "Assignment is not modeled",
+        "options": [],
+        "assumptions": [],
+        "confirmingFunction": "Facilities owner",
+        "blocking": true
+      },
+      "refs": [
+        {
+          "relation": "target",
+          "target": "loans",
+          "type": "service"
+        }
+      ]
+    },
+    {
+      "id": "source",
+      "type": "source",
+      "title": "Synthetic research note",
+      "purpose": "Record the workflow",
+      "status": "reference",
+      "detail": {},
+      "source": {
+        "recordKey": "source",
+        "text": "A borrower requests equipment, staff review it, and inventory records the checkout.",
+        "locator": "note",
+        "version": "1",
+        "sha256": "e1d21d119d434c3a0a0e82de923a496d73518d1fd32b290f30db298a9f4572e8"
+      }
+    }
+  ],
+  "profile": {
+    "id": "profile",
+    "version": "1",
+    "components": [
+      {
+        "id": "all",
+        "version": 1,
+        "type": "overview",
+        "heading": "Equipment",
+        "selector": {
+          "types": [
+            "project",
+            "service",
+            "role",
+            "activity",
+            "interface",
+            "field",
+            "binding",
+            "rule",
+            "action",
+            "question",
+            "source"
+          ]
+        },
+        "requiredWhen": "selected",
+        "gapPolicy": "include",
+        "clientProjection": "include",
+        "outputs": [
+          "workspace",
+          "document"
+        ]
+      }
+    ],
+    "productDocument": {
+      "version": 2,
+      "key": "facilities-equipment",
+      "language": "en",
+      "modules": [
+        {
+          "id": "facilitiesModule",
+          "title": "Facilities",
+          "subModules": [
+            {
+              "id": "borrowing",
+              "title": "Borrowing",
+              "features": [
+                {
+                  "id": "checkoutFeature",
+                  "key": "equipment-checkout",
+                  "title": "Equipment checkout",
+                  "service": "loans",
+                  "status": "detailed",
+                  "summary": {
+                    "text": "Request, review and record a loan.",
+                    "reviewed": [
+                      {
+                        "object": "loans",
+                        "sha256": "51a59355d0cb226305459e178ff8dbc5ce92cb52e76ea53b1e2d283d3a6dd3e6"
+                      }
+                    ]
+                  },
+                  "workflow": {
+                    "view": "checkoutFlow",
+                    "caption": "Equipment checkout workflow"
+                  },
+                  "actions": [
+                    {
+                      "id": "requestAction",
+                      "activity": "request",
+                      "performer": "external",
+                      "summary": {
+                        "text": "The borrower submits equipment and return details.",
+                        "reviewed": [
+                          {
+                            "object": "request",
+                            "sha256": "d5d14e54e711ab3bbb3760a060c8fd1c73e85a52fecd8a24210bbd13289c2579"
+                          },
+                          {
+                            "object": "borrower",
+                            "sha256": "ef7a1fc4de2beb3aa4389daf9341aa0aef15415bfa4b4c47f89edc2d476a41e5"
+                          },
+                          {
+                            "object": "requestPage",
+                            "sha256": "bd99e2344cdd5d544663eeacadb2cf4c4752b1e9bab9a892b8806b2424ccb5ad"
+                          }
+                        ]
+                      },
+                      "pages": [
+                        {
+                          "id": "requestPageAnchor",
+                          "interface": "requestPage",
+                          "groups": [
+                            {
+                              "id": "requestGroup",
+                              "title": "Request details",
+                              "summary": {
+                                "text": "Collect equipment and return details.",
+                                "reviewed": [
+                                  {
+                                    "object": "item",
+                                    "sha256": "102c3e142425c2cc7d625a36c1be02a967e432762b5b179aef41e2ea0be9eaae"
+                                  },
+                                  {
+                                    "object": "date",
+                                    "sha256": "2a77aa37bd5efef13ea2faa6ec488a082ef794cb6e9d4e90ff1d71e7b19df474"
+                                  },
+                                  {
+                                    "object": "itemInput",
+                                    "sha256": "8dc3c476ef2bb8dc98205c09baeba4f42847836461db568a580f674332a0e5ab"
+                                  },
+                                  {
+                                    "object": "dateInput",
+                                    "sha256": "564582aebf71dd30c0da2eb1b3ed27c9efa314f1f2176f76e808ab033db4704d"
+                                  },
+                                  {
+                                    "object": "dateRule",
+                                    "sha256": "22092276111fabc253e880cb8bb1185242881d51dd8653e06d2805674563e50a"
+                                  },
+                                  {
+                                    "object": "requestPage",
+                                    "sha256": "bd99e2344cdd5d544663eeacadb2cf4c4752b1e9bab9a892b8806b2424ccb5ad"
+                                  }
+                                ]
+                              },
+                              "sources": [
+                                "item",
+                                "date",
+                                "itemInput",
+                                "dateInput",
+                                "dateRule"
+                              ],
+                              "fields": [
+                                "Equipment",
+                                "Return date"
+                              ],
+                              "rules": [
+                                "Temporary equipment requires a return date; return an unknown date for clarification."
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "groups": []
+                    },
+                    {
+                      "id": "reviewAction",
+                      "activity": "review",
+                      "performer": "user",
+                      "summary": {
+                        "text": "Staff approve the request or return it for clarification.",
+                        "reviewed": [
+                          {
+                            "object": "review",
+                            "sha256": "e4f46eefac8ca90654eff8534af0bd2c147315bb47430154b0412068fd7e8dac"
+                          },
+                          {
+                            "object": "staff",
+                            "sha256": "4deffc512868bdec20c0868b0311f4ac11d26301c990ac691623e4fa6bd28823"
+                          }
+                        ]
+                      },
+                      "pages": [],
+                      "groups": []
+                    },
+                    {
+                      "id": "inventoryAction",
+                      "activity": "record",
+                      "performer": "system",
+                      "summary": {
+                        "text": "The inventory system records the checkout.",
+                        "reviewed": [
+                          {
+                            "object": "record",
+                            "sha256": "b2ae1dfced5aed87f30e89876d4c9905cca159b939c9293a89b5edb2418517e6"
+                          },
+                          {
+                            "object": "recordAction",
+                            "sha256": "e4cfd290269563d2f096486639c0e41f17deb77e5e83bebea921fcff980555a4"
+                          },
+                          {
+                            "object": "inventory",
+                            "sha256": "e6dcbfea965a0addde2096d6dc1840ba2e11514ef250513346cbb4bc44cd89ad"
+                          }
+                        ]
+                      },
+                      "pages": [],
+                      "groups": [
+                        {
+                          "id": "inventoryGroup",
+                          "title": "Inventory update",
+                          "summary": {
+                            "text": "Mark the equipment checked out; if inventory is unavailable keep the request pending.",
+                            "reviewed": [
+                              {
+                                "object": "recordAction",
+                                "sha256": "e4cfd290269563d2f096486639c0e41f17deb77e5e83bebea921fcff980555a4"
+                              },
+                              {
+                                "object": "inventory",
+                                "sha256": "e6dcbfea965a0addde2096d6dc1840ba2e11514ef250513346cbb4bc44cd89ad"
+                              }
+                            ]
+                          },
+                          "sources": [
+                            "recordAction"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "returnFeature",
+                  "key": "equipment-return",
+                  "title": "Equipment return",
+                  "service": "loans",
+                  "status": "detailed",
+                  "summary": {
+                    "text": "Return previously borrowed equipment.",
+                    "reviewed": [
+                      {
+                        "object": "loans",
+                        "sha256": "51a59355d0cb226305459e178ff8dbc5ce92cb52e76ea53b1e2d283d3a6dd3e6"
+                      }
+                    ]
+                  },
+                  "workflow": {
+                    "view": "returnFlow",
+                    "caption": "Equipment return workflow"
+                  },
+                  "actions": [
+                    {
+                      "id": "returnAction",
+                      "activity": "return",
+                      "performer": "external",
+                      "summary": {
+                        "text": "The borrower returns equipment.",
+                        "reviewed": [
+                          {
+                            "object": "return",
+                            "sha256": "2e4a4c97bc207de8d16da247b150a3b0251acd7f3e96d898830012faaaf63eee"
+                          },
+                          {
+                            "object": "borrower",
+                            "sha256": "ef7a1fc4de2beb3aa4389daf9341aa0aef15415bfa4b4c47f89edc2d476a41e5"
+                          }
+                        ]
+                      },
+                      "pages": [],
+                      "groups": []
+                    }
+                  ]
+                },
+                {
+                  "id": "renewalFeature",
+                  "key": "equipment-renewal",
+                  "title": "Equipment renewal",
+                  "service": "loans",
+                  "status": "catalog-only",
+                  "question": "operatorQuestion"
+                }
+              ]
+            },
+            {
+              "id": "maintenance",
+              "title": "Maintenance",
+              "features": [
+                {
+                  "id": "inspectionFeature",
+                  "key": "equipment-inspection",
+                  "title": "Equipment inspection",
+                  "service": "loans",
+                  "status": "catalog-only",
+                  "question": "operatorQuestion"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "assets": [],
+  "nativeViews": [
+    {
+      "id": "checkoutFlow",
+      "diagramType": "workflow",
+      "service": "loans",
+      "source": "source",
+      "anchor": {
+        "locator": "note",
+        "quote": "A borrower requests equipment, staff review it, and inventory records the checkout."
+      },
+      "spec": {
+        "schema_version": 2,
+        "diagram_type": "workflow",
+        "meta": {
+          "title": "checkoutFlow",
+          "output": "checkoutFlow.html"
+        },
+        "lanes": [
+          {
+            "id": "borrowerLane",
+            "label": "Borrower"
+          },
+          {
+            "id": "staffLane",
+            "label": "Staff"
+          },
+          {
+            "id": "systemLane",
+            "label": "Inventory system"
+          }
+        ],
+        "nodes": [
+          {
+            "id": "requestNode",
+            "lane": "borrowerLane",
+            "col": 0,
+            "type": "frontend",
+            "label": "Submit request"
+          },
+          {
+            "id": "reviewNode",
+            "lane": "staffLane",
+            "col": 1,
+            "type": "frontend",
+            "label": "Review request"
+          },
+          {
+            "id": "recordNode",
+            "lane": "systemLane",
+            "col": 2,
+            "type": "backend",
+            "label": "Record checkout"
+          }
+        ],
+        "edges": [
+          {
+            "id": "submitEdge",
+            "from": "requestNode",
+            "to": "reviewNode",
+            "label": "Request submitted"
+          },
+          {
+            "id": "approvedEdge",
+            "from": "reviewNode",
+            "to": "recordNode",
+            "label": "Approved"
+          },
+          {
+            "id": "clarifyEdge",
+            "from": "reviewNode",
+            "to": "requestNode",
+            "label": "Clarify",
+            "role": "return"
+          },
+          {
+            "id": "unavailableEdge",
+            "from": "recordNode",
+            "to": "reviewNode",
+            "label": "Inventory unavailable",
+            "role": "error"
+          }
+        ]
+      },
+      "laneBindings": [
+        {
+          "lane": "borrowerLane",
+          "role": "borrower"
+        },
+        {
+          "lane": "staffLane",
+          "role": "staff"
+        },
+        {
+          "lane": "systemLane",
+          "role": "inventory"
+        }
+      ],
+      "bindings": [
+        {
+          "node": "requestNode",
+          "object": "request",
+          "type": "activity"
+        },
+        {
+          "node": "reviewNode",
+          "object": "review",
+          "type": "activity"
+        },
+        {
+          "node": "recordNode",
+          "object": "record",
+          "type": "activity"
+        }
+      ]
+    },
+    {
+      "id": "returnFlow",
+      "diagramType": "workflow",
+      "service": "loans",
+      "source": "source",
+      "anchor": {
+        "locator": "note",
+        "quote": "A borrower requests equipment, staff review it, and inventory records the checkout."
+      },
+      "spec": {
+        "schema_version": 2,
+        "diagram_type": "workflow",
+        "meta": {
+          "title": "returnFlow",
+          "output": "returnFlow.html"
+        },
+        "lanes": [
+          {
+            "id": "returnLane",
+            "label": "Borrower"
+          }
+        ],
+        "nodes": [
+          {
+            "id": "returnNode",
+            "lane": "returnLane",
+            "col": 0,
+            "type": "frontend",
+            "label": "Return equipment"
+          }
+        ],
+        "edges": []
+      },
+      "laneBindings": [
+        {
+          "lane": "returnLane",
+          "role": "borrower"
+        }
+      ],
+      "bindings": [
+        {
+          "node": "returnNode",
+          "object": "return",
+          "type": "activity"
+        }
+      ]
+    }
+  ]
+}

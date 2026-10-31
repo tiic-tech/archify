@@ -24,6 +24,29 @@ const REQUIRED_INPUTS = new Set([
   'archify/scripts/update-contract.mjs',
   'archify/skill-release.json',
 ]);
+// The PRD family is required as a unit once any PRD capability is present.
+// Historical Skills that predate the family remain reproducible.
+export const PRD_REQUIRED_INPUTS = Object.freeze([
+  ...['prd-cli.mjs','prd-components.mjs','prd-context.mjs','prd-export.mjs','prd-feedback-cli.mjs','prd-feedback-public.mjs','prd-feedback.mjs','prd-model.mjs','prd-prepare.mjs','prd-product-document.mjs','prd-product-export.mjs','prd-product-public.mjs','prd-proposal.mjs','prd-questions.mjs','prd-reader-bridge.js','prd-reader-feedback.js','prd-reader-package.mjs','prd-reader.css','prd-service-export.mjs','prd-service.mjs'].map(name=>`archify/explainer/workspace/${name}`),
+  'archify/schemas/prd-workspace.schema.json',
+  'archify/explainer/workspace/generated-prd-validators.mjs',
+  'archify/explainer/workspace/generated-prd-feedback-browser.js',
+  'archify/explainer/workspace/prd-product-v2.mjs',
+  'archify/explainer/workspace/prd-standard-v1.mjs',
+  'archify/explainer/workspace/prd-standard-refinements.mjs',
+  'archify/explainer/workspace/prd-standard-context.mjs',
+  'archify/explainer/workspace/prd-standard-composer.mjs',
+  'archify/explainer/workspace/prd-product-public-v2.mjs',
+  'archify/explainer/workspace/prd-feature-composer.mjs',
+  'archify/explainer/workspace/prd-feature-export.mjs',
+  'archify/explainer/workspace/prd-reader-build.mjs',
+  'archify/explainer/workspace/prd-reader.js',
+  'archify/explainer/workspace/prd-feedback-schema.mjs',
+  'archify/explainer/workspace/prd-proposal-schema.mjs',
+  'archify/references/prd-workspace.md',
+  'archify/references/prd-authoring.md',
+  'archify/examples/prd-research-starter.json',
+]);
 const RUNTIME_DEPENDENCIES = Object.freeze([
   'archify/renderers/shared/atomic-output.mjs',
   'archify/renderers/shared/output-path.mjs',
@@ -557,6 +580,11 @@ export function stageCleanSkill({ repoRoot = scriptRoot, destination, modeManife
   const packageEntries = includedEntries
     .map((entry) => preflightSourceEntry(resolvedRoot, entry))
     .map((entry) => snapshotSourceEntry(entry));
+  // Detect the capability from tracked family members or an importing CLI;
+  // neither an incomplete current family nor its docs can masquerade as old.
+  const prdPresent=packageEntries.some(entry=>PRD_REQUIRED_INPUTS.includes(entry.relative)
+    || /[.]m?js$/u.test(entry.relative)&&entry.content.includes('prd-cli.mjs'));
+  if(prdPresent)for(const required of PRD_REQUIRED_INPUTS)if(!tracked.has(required))throw new Error(`required package input is not tracked by Git: ${required}`);
   // Current packages must contain every imported runtime, while historical
   // snapshots that predate a runtime remain reproducible by the DSH adapter.
   validateRuntimeDependencies(packageEntries);

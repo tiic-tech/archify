@@ -4,9 +4,10 @@ All notable changes are documented here. Format loosely follows [Keep a Changelo
 
 ## [Unreleased]
 
-> Development identity: `v3.2.1-dev.1`. Not a stable release.
+> Development identity: `v3.3.0-dev.1`. Independent Fork foundation prerelease; not an official stable release.
 
 ### Added
+- **Versioned research and PRD workspace foundation.** Retain source-backed research and questions, author native Feature workflows and opt into structured standard PRD projections with scoped readiness and independently approved public material. The offline reader and explicit feedback transfer do not provide durable canvas editing, autosave or cloud collaboration; review bindings are not business confirmation. See [Fork prerelease scope](docs/plans/prd-standard/FORK_PRERELEASE.md).
 - **Authored node explanations in the Semantic Passport.** Architecture, Workflow, Sequence, Dataflow and Lifecycle nodes may carry optional plain-text explanations up to1200 characters. Explain opens a viewport-bounded reading face with scrollable prose and a reachable Back action; Escape restores the Passport. Prose remains outside canonical SVG and visual exports, and existing diagram geometry is preserved.
 - **Cross-diagram navigation.** Nodes may list sibling `.html` targets via `drilldowns` or a one-entry `href` shorthand. One child uses a native SVG link and visible mark (click follows, Alt-click focuses). Several children keep click-to-focus, with Passport listing every target and Ctrl/double-click opening the first. Child pages can author `meta.parentHref` for header Back; the Viewer also accepts `?from=`.
 

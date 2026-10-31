@@ -1,0 +1,40 @@
+{
+  "serviceFile": "service.html",
+  "workflowFile": "workflow.html",
+  "service": {
+    "schema_version": 1,
+    "diagram_type": "explainer",
+    "meta": { "id": "maintenance-service", "title": "Facility maintenance", "locale": "en" },
+    "answer": { "summary": "Coordinate requests for maintenance at a facility." },
+    "panels": [{ "id": "service-purpose", "title": "Purpose", "blocks": [{ "id": "purpose", "type": "prose", "text": "Keep each maintenance request visible from intake to completion." }] }],
+    "sources": []
+  },
+  "workflow": {
+    "schema_version": 2,
+    "diagram_type": "workflow",
+    "meta": { "title": "Maintenance request workflow", "locale": "en", "parentHref": "service.html", "output": "workflow.html", "legend": { "entries": { "frontend": { "label": "Dispatcher action" }, "backend": { "label": "Technician action" } } } },
+    "lanes": [{ "id": "dispatcher", "label": "Dispatcher" }, { "id": "technician", "label": "Technician" }],
+    "nodes": [
+      { "id": "intake", "lane": "dispatcher", "col": 0, "type": "frontend", "label": "Receive request", "href": "intake.html" },
+      { "id": "assess", "lane": "technician", "col": 1, "type": "backend", "label": "Assess request", "drilldowns": [{ "href": "assessment.html", "label": "Assessment details" }, { "href": "schedule.html", "label": "Scheduling details" }] },
+      { "id": "complete", "lane": "technician", "col": 2, "type": "backend", "label": "Complete work" }
+    ],
+    "edges": [{ "id": "intake-assess", "from": "intake", "to": "assess" }, { "id": "assess-complete", "from": "assess", "to": "complete" }]
+  },
+  "workspace": {
+    "activities": [
+      { "node": "intake", "purpose": "Capture enough information to route a request.", "relationships": ["Dispatcher receives the report", "Assessment follows intake"] },
+      { "node": "assess", "purpose": "Determine what work is needed and when.", "relationships": ["Technician reviews the request", "Completion follows assessment"] }
+    ],
+    "pages": [
+      { "target": "intake.html", "title": "Request intake", "purpose": "Record the reported issue and its location.", "children": [{ "id": "location", "title": "Location", "purpose": "Identify the facility area.", "children": [{ "id": "location-note", "title": "Location note", "purpose": "Describe where the technician should look.", "children": [] }] }] },
+      { "target": "assessment.html", "title": "Assessment", "purpose": "Review the reported issue.", "children": [{ "id": "finding", "title": "Finding", "purpose": "Describe the observed issue.", "children": [] }] },
+      { "target": "schedule.html", "title": "Scheduling", "purpose": "Arrange a suitable time.", "children": [{ "id": "time", "title": "Work time", "purpose": "Record the proposed appointment.", "children": [] }] }
+    ]
+  },
+  "details": [
+    { "file": "intake.html", "document": { "schema_version": 1, "diagram_type": "explainer", "meta": { "id": "intake-detail", "title": "Receive request", "locale": "en" }, "answer": { "summary": "Capture the location and the reported maintenance issue." }, "panels": [{ "id": "intake-context", "title": "What is recorded?", "blocks": [{ "id": "intake-content", "type": "prose", "text": "The dispatcher records a location and a description before assessment." }] }], "sources": [] } },
+    { "file": "assessment.html", "document": { "schema_version": 1, "diagram_type": "explainer", "meta": { "id": "assessment-detail", "title": "Assess request", "locale": "en" }, "answer": { "summary": "Determine the next maintenance action." }, "panels": [{ "id": "assessment-context", "title": "Assessment", "blocks": [{ "id": "assessment-content", "type": "prose", "text": "Review the reported issue and decide how it should be handled." }] }], "sources": [] } },
+    { "file": "schedule.html", "document": { "schema_version": 1, "diagram_type": "explainer", "meta": { "id": "schedule-detail", "title": "Schedule work", "locale": "en" }, "answer": { "summary": "Arrange a time for maintenance work." }, "panels": [{ "id": "schedule-context", "title": "Scheduling", "blocks": [{ "id": "schedule-content", "type": "prose", "text": "Coordinate a suitable time with the facility." }] }], "sources": [] } }
+  ]
+}

@@ -209,12 +209,27 @@ jobs:
       - name: Install browser test dependencies
         if: needs.scope.outputs.browser == 'true'
         run: npm ci --ignore-scripts --no-audit --no-fund && npm --prefix archify ci --ignore-scripts
+      - name: Provision Chrome's setuid sandbox helper
+        if: needs.scope.outputs.browser == 'true'
+        id: chrome-sandbox
+        shell: bash
+        env:
+          CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+        run: |
+          set -euo pipefail
+          test "$(id -u)" -ne 0
+          helper="$(dirname "$CHROME_PATH")/chrome-sandbox"
+          if [[ ! -f "$helper" ]]; then helper="$(dirname "$CHROME_PATH")/chrome_sandbox"; fi
+          test -f "$helper" && test ! -L "$helper"
+          sudo chown root:root "$helper"
+          sudo chmod 4755 "$helper"
+          echo "path=$helper" >> "$GITHUB_OUTPUT"
       - name: Run shared browser regression gate
         if: needs.scope.outputs.browser == 'true'
         run: npm run test:browser -- --shard=${{ matrix.shard }}/2
         env:
           ARCHIFY_CHROME: ${{ steps.setup-chrome.outputs.chrome-path }}
-          ARCHIFY_CHROME_NO_SANDBOX: '1'
+          CHROME_DEVEL_SANDBOX: ${{ steps.chrome-sandbox.outputs.path }}
 
   webm-decode:
     needs: scope
@@ -326,37 +341,40 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          manifest_version="$(node --input-type=module -e 'import fs from "node:fs"; import { validateStableUpdateManifest } from "./archify/scripts/update-contract.mjs"; process.stdout.write(validateStableUpdateManifest(JSON.parse(fs.readFileSync("./docs/skill-updates/archify/stable.json", "utf8"))).version);')"
-          latest_stable_tag="$(gh api "repos/${GITHUB_REPOSITORY}/releases/latest" --jq 'select(.draft == false and .prerelease == false) | .tag_name')"
+          validated_source="$(node --input-type=module -e 'import fs from "node:fs"; import { validateStableUpdateManifest } from "./archify/scripts/update-contract.mjs"; const m = validateStableUpdateManifest(JSON.parse(fs.readFileSync("./docs/skill-updates/archify/stable.json", "utf8"))); process.stdout.write([m.version, m.source.repository, m.source.ref].join("\t"));')"
+          IFS=$'\t' read -r manifest_version source_repository manifest_tag <<< "$validated_source"
+          source_slug="${source_repository#https://github.com/}"
+          source_ref="refs/archify/stable/${manifest_tag}"
+          latest_stable_tag="$(gh api "repos/${source_slug}/releases/latest" --jq 'select(.draft == false and .prerelease == false) | .tag_name')"
           if [[ "$latest_stable_tag" != "v${manifest_version}" ]]; then
             echo "::error::stable.json v${manifest_version} must match the latest published stable Release ${latest_stable_tag:-'(missing)'}"
             exit 1
           fi
-          release_asset_id="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/v${manifest_version}" --jq 'select(.draft == false and .prerelease == false) | .assets[] | select(.name == "archify.zip") | .id')"
+          release_asset_id="$(gh api "repos/${source_slug}/releases/tags/${manifest_tag}" --jq 'select(.draft == false and .prerelease == false) | .assets[] | select(.name == "archify.zip") | .id')"
           if [[ -z "$release_asset_id" ]]; then
             echo "::error::v${manifest_version} must have a published stable GitHub Release with an archify.zip asset before stable.json is merged"
             exit 1
           fi
           published_archive="$RUNNER_TEMP/archify-v${manifest_version}.zip"
-          gh api "repos/${GITHUB_REPOSITORY}/releases/assets/${release_asset_id}" \
+          gh api "repos/${source_slug}/releases/assets/${release_asset_id}" \
             -H 'Accept: application/octet-stream' > "$published_archive"
-          git fetch --force --no-tags --depth=1 origin \
-            "refs/tags/v${manifest_version}:refs/tags/v${manifest_version}"
+          git fetch --no-tags --depth=1 "$source_repository" \
+            "refs/tags/${manifest_tag}:${source_ref}"
           tagged_archive="$RUNNER_TEMP/archify-tag-v${manifest_version}.zip"
-          git show "v${manifest_version}:archify.zip" > "$tagged_archive"
+          git show "${source_ref}:archify.zip" > "$tagged_archive"
           if ! cmp -s "$published_archive" "$tagged_archive"; then
             echo "::error::the published archify.zip asset must byte-match archify.zip committed at v${manifest_version}"
             exit 1
           fi
           node scripts/check-stable-update-manifest.mjs \
             --archive "$published_archive" \
-            --tag "v${manifest_version}" \
-            --source-ref "v${manifest_version}"
-          if git cat-file -e "v${manifest_version}:scripts/stage-clean-skill.mjs" 2>/dev/null \
-            && git cat-file -e "v${manifest_version}:scripts/write-deterministic-zip.mjs" 2>/dev/null; then
+            --tag "$manifest_tag" \
+            --source-ref "$source_ref"
+          if git cat-file -e "${source_ref}:scripts/stage-clean-skill.mjs" 2>/dev/null \
+            && git cat-file -e "${source_ref}:scripts/write-deterministic-zip.mjs" 2>/dev/null; then
             tag_checkout="$RUNNER_TEMP/archify-tag-v${manifest_version}"
             rebuilt_archive="$RUNNER_TEMP/archify-rebuilt-v${manifest_version}.zip"
-            git worktree add --detach "$tag_checkout" "v${manifest_version}"
+            git worktree add --detach "$tag_checkout" "$source_ref"
             "$tag_checkout/scripts/build-zip.sh" "$rebuilt_archive"
             if ! cmp -s "$rebuilt_archive" "$tagged_archive"; then
               echo "::error::archify.zip committed at v${manifest_version} is not the deterministic build of that tag"

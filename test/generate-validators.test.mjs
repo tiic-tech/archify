@@ -136,21 +136,33 @@ test('validator freshness check accepts CRLF checkouts', () => {
       path.join(scratch, 'scripts', 'generate-validators.mjs'),
     );
 
-    const validator = fs.readFileSync(
-      path.join(skillRoot, 'renderers', 'shared', 'generated-validators.mjs'),
-      'utf8',
-    );
-    fs.writeFileSync(
-      path.join(scratch, 'renderers', 'shared', 'generated-validators.mjs'),
-      validator.replace(/\r\n?|\n/g, '\r\n'),
-    );
-
-    const result = spawnSync(process.execPath, [
-      path.join(scratch, 'scripts', 'generate-validators.mjs'),
-      '--check',
+    const workspace = 'explainer/workspace';
+    fs.mkdirSync(path.join(scratch, workspace), { recursive: true });
+    for (const name of ['prd-feedback-schema.mjs', 'prd-proposal-schema.mjs']) {
+      fs.copyFileSync(path.join(skillRoot, workspace, name), path.join(scratch, workspace, name));
+    }
+    const outputs = [
+      'renderers/shared/generated-validators.mjs',
+      `${workspace}/generated-prd-validators.mjs`,
+      `${workspace}/generated-prd-feedback-browser.js`,
+    ];
+    for (const file of outputs) {
+      const generated = fs.readFileSync(path.join(skillRoot, file), 'utf8');
+      fs.writeFileSync(path.join(scratch, file), generated.replace(/\r\n?|\n/g, '\r\n'));
+    }
+    const check = () => spawnSync(process.execPath, [
+      path.join(scratch, 'scripts', 'generate-validators.mjs'), '--check',
     ], { encoding: 'utf8' });
-
+    const result = check();
     assert.equal(result.status, 0, result.stderr);
+    for (const file of outputs) {
+      const target = path.join(scratch, file), original = fs.readFileSync(target);
+      fs.appendFileSync(target, '// stale\r\n');
+      const stale = check();
+      assert.notEqual(stale.status, 0, `${file} must not pass when stale`);
+      assert.match(stale.stderr, /stale/);
+      fs.writeFileSync(target, original);
+    }
   } finally {
     fs.rmSync(scratch, { recursive: true, force: true });
   }

@@ -94,6 +94,16 @@ test('stable release gate binds manifest tag, tree, and final archive digest', (
     writeJson(path.join(fixture, 'archify', 'package.json'), { version: '4.0.0-dev.0' });
     const historicalRelease = runCheck(fixture, archive, ['--source-ref', 'v3.0.0']);
     assert.equal(historicalRelease.status, 0, historicalRelease.stderr);
+    const fetchedRef='refs/archify/stable/v3.0.0';
+    assert.equal(git(fixture,['update-ref',fetchedRef,'refs/tags/v3.0.0']).status,0);
+    assert.equal(git(fixture,['tag','-d','v3.0.0']).status,0);
+    assert.equal(git(fixture,['tag','v3.0.0']).status,0);
+    const fetchedRelease=runCheck(fixture,archive,['--source-ref',fetchedRef]);
+    assert.equal(fetchedRelease.status,0,fetchedRelease.stderr,'the fetched annotated object must be used instead of a conflicting local tag');
+    const wrongFetchedRef=runCheck(fixture,archive,['--source-ref','refs/archify/stable/v2.9.0']);
+    assert.notEqual(wrongFetchedRef.status,0);
+    assert.equal(git(fixture,['tag','-d','v3.0.0']).status,0);
+    assert.equal(git(fixture,['update-ref','refs/tags/v3.0.0',fetchedRef]).status,0);
     const wrongHistoricalRef = runCheck(fixture, archive, ['--source-ref', 'v2.9.0']);
     assert.notEqual(wrongHistoricalRef.status, 0);
     assert.match(wrongHistoricalRef.stderr, /--source-ref must be HEAD or the exact release tag/);
