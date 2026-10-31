@@ -1,0 +1,2943 @@
+{
+  "schemaVersion": 1,
+  "objects": [
+    {
+      "id": "project",
+      "type": "project",
+      "title": "Facilities",
+      "purpose": "Manage shared equipment",
+      "status": "proposed",
+      "detail": {
+        "scope": "Equipment loans"
+      }
+    },
+    {
+      "id": "loans",
+      "type": "service",
+      "title": "Equipment loans",
+      "purpose": "Manage equipment loans",
+      "status": "proposed",
+      "detail": {
+        "boundary": "Equipment borrowing"
+      },
+      "parent": "project"
+    },
+    {
+      "id": "borrower",
+      "type": "role",
+      "title": "Borrower",
+      "purpose": "Request equipment",
+      "status": "proposed",
+      "detail": {
+        "actorKind": "human"
+      }
+    },
+    {
+      "id": "staff",
+      "type": "role",
+      "title": "Staff",
+      "purpose": "Review requests",
+      "status": "proposed",
+      "detail": {
+        "actorKind": "human"
+      }
+    },
+    {
+      "id": "inventory",
+      "type": "role",
+      "title": "Inventory system",
+      "purpose": "Update inventory",
+      "status": "proposed",
+      "detail": {
+        "actorKind": "system"
+      }
+    },
+    {
+      "id": "request",
+      "type": "activity",
+      "title": "Request equipment",
+      "purpose": "Submit a request",
+      "status": "proposed",
+      "detail": {
+        "actorKind": "human"
+      },
+      "parent": "loans",
+      "refs": [
+        {
+          "relation": "actor",
+          "target": "borrower",
+          "type": "role"
+        },
+        {
+          "relation": "uses",
+          "target": "requestPage",
+          "type": "interface"
+        }
+      ]
+    },
+    {
+      "id": "review",
+      "type": "activity",
+      "title": "Review request",
+      "purpose": "Approve or return a request",
+      "status": "proposed",
+      "detail": {
+        "actorKind": "human"
+      },
+      "parent": "loans",
+      "refs": [
+        {
+          "relation": "actor",
+          "target": "staff",
+          "type": "role"
+        }
+      ]
+    },
+    {
+      "id": "record",
+      "type": "activity",
+      "title": "Record checkout",
+      "purpose": "Record the checkout",
+      "status": "proposed",
+      "detail": {
+        "actorKind": "system"
+      },
+      "parent": "loans",
+      "refs": [
+        {
+          "relation": "action",
+          "target": "recordAction",
+          "type": "action"
+        }
+      ]
+    },
+    {
+      "id": "requestPage",
+      "type": "interface",
+      "title": "Request form",
+      "purpose": "Enter the loan request",
+      "status": "proposed",
+      "detail": {
+        "kind": "page"
+      }
+    },
+    {
+      "id": "item",
+      "type": "field",
+      "title": "Equipment",
+      "purpose": "Identify the requested equipment",
+      "status": "proposed",
+      "detail": {
+        "dataType": "string"
+      }
+    },
+    {
+      "id": "date",
+      "type": "field",
+      "title": "Return date",
+      "purpose": "Specify the expected return date",
+      "status": "proposed",
+      "detail": {
+        "dataType": "string"
+      }
+    },
+    {
+      "id": "itemInput",
+      "type": "binding",
+      "title": "Equipment selection",
+      "purpose": "Select equipment",
+      "status": "proposed",
+      "detail": {
+        "visibility": {
+          "constant": true
+        },
+        "editable": {
+          "constant": true
+        },
+        "required": {
+          "constant": true
+        }
+      },
+      "parent": "requestPage",
+      "refs": [
+        {
+          "relation": "field",
+          "target": "item",
+          "type": "field"
+        }
+      ]
+    },
+    {
+      "id": "dateInput",
+      "type": "binding",
+      "title": "Return date entry",
+      "purpose": "Enter the date",
+      "status": "proposed",
+      "detail": {
+        "visibility": {
+          "constant": true
+        },
+        "editable": {
+          "constant": true
+        },
+        "required": {
+          "field": "item",
+          "op": "eq",
+          "value": "temporary"
+        }
+      },
+      "parent": "requestPage",
+      "refs": [
+        {
+          "relation": "field",
+          "target": "date",
+          "type": "field"
+        },
+        {
+          "relation": "rule",
+          "target": "dateRule",
+          "type": "rule"
+        }
+      ]
+    },
+    {
+      "id": "dateRule",
+      "type": "rule",
+      "title": "Return date rule",
+      "purpose": "Check the requested date",
+      "status": "proposed",
+      "detail": {},
+      "rule": {
+        "scope": [
+          "requestPage"
+        ],
+        "condition": {
+          "field": "item",
+          "op": "eq",
+          "value": "temporary"
+        },
+        "effect": "Return date is required",
+        "unit": "Not specified",
+        "precision": "Not specified",
+        "time": "At request",
+        "exceptions": [
+          {
+            "scope": [
+              "requestPage"
+            ],
+            "condition": {
+              "field": "date",
+              "op": "eq",
+              "value": "unknown"
+            },
+            "effect": "Return the request for clarification"
+          }
+        ]
+      }
+    },
+    {
+      "id": "recordAction",
+      "type": "action",
+      "title": "Update inventory",
+      "purpose": "Record the checkout",
+      "status": "proposed",
+      "detail": {
+        "contracts": {
+          "stateEffects": {
+            "value": "Mark equipment as checked out"
+          },
+          "errors": {
+            "value": "Keep the request pending if inventory is unavailable"
+          }
+        }
+      },
+      "refs": [
+        {
+          "relation": "actor",
+          "target": "inventory",
+          "type": "role"
+        },
+        {
+          "relation": "integration",
+          "target": "inventoryLink",
+          "type": "integration"
+        },
+        {
+          "relation": "state",
+          "target": "pendingState",
+          "type": "state"
+        },
+        {
+          "relation": "state",
+          "target": "checkedOutState",
+          "type": "state"
+        }
+      ]
+    },
+    {
+      "id": "operatorQuestion",
+      "type": "question",
+      "title": "Who assigns the operator?",
+      "purpose": "Clarify operator assignment",
+      "status": "proposed",
+      "detail": {
+        "scope": [
+          "loans"
+        ],
+        "consequence": "Assignment is not modeled",
+        "options": [],
+        "assumptions": [],
+        "confirmingFunction": "Facilities owner",
+        "blocking": true
+      },
+      "refs": [
+        {
+          "relation": "target",
+          "target": "loans",
+          "type": "service"
+        }
+      ]
+    },
+    {
+      "id": "source",
+      "type": "source",
+      "title": "Synthetic research note",
+      "purpose": "Record the workflow",
+      "status": "reference",
+      "detail": {},
+      "source": {
+        "recordKey": "source",
+        "text": "A borrower requests equipment, staff review it, and inventory records the checkout.",
+        "locator": "note",
+        "version": "1",
+        "sha256": "e1d21d119d434c3a0a0e82de923a496d73518d1fd32b290f30db298a9f4572e8"
+      }
+    },
+    {
+      "id": "documentQuestion",
+      "type": "question",
+      "title": "Which document control details are confirmed?",
+      "purpose": "Which document control details are confirmed?",
+      "status": "proposed",
+      "detail": {
+        "scope": [
+          "project"
+        ],
+        "consequence": "The corresponding detail remains unconfirmed.",
+        "options": [],
+        "assumptions": [],
+        "confirmingFunction": "Facilities owner",
+        "blocking": true
+      },
+      "refs": [
+        {
+          "relation": "target",
+          "target": "project",
+          "type": "project"
+        }
+      ]
+    },
+    {
+      "id": "scopeQuestion",
+      "type": "question",
+      "title": "Which remaining loan policies are confirmed?",
+      "purpose": "Which remaining loan policies are confirmed?",
+      "status": "proposed",
+      "detail": {
+        "scope": [
+          "loans"
+        ],
+        "consequence": "The corresponding detail remains unconfirmed.",
+        "options": [],
+        "assumptions": [],
+        "confirmingFunction": "Facilities owner",
+        "blocking": true
+      },
+      "refs": [
+        {
+          "relation": "target",
+          "target": "loans",
+          "type": "service"
+        }
+      ]
+    },
+    {
+      "id": "screenQuestion",
+      "type": "question",
+      "title": "What interface supports staff review?",
+      "purpose": "What interface supports staff review?",
+      "status": "proposed",
+      "detail": {
+        "scope": [
+          "review"
+        ],
+        "consequence": "The corresponding detail remains unconfirmed.",
+        "options": [],
+        "assumptions": [],
+        "confirmingFunction": "Facilities owner",
+        "blocking": true
+      },
+      "refs": [
+        {
+          "relation": "target",
+          "target": "review",
+          "type": "activity"
+        }
+      ]
+    },
+    {
+      "id": "fieldQuestion",
+      "type": "question",
+      "title": "What are the field design and defaults?",
+      "purpose": "What are the field design and defaults?",
+      "status": "proposed",
+      "detail": {
+        "scope": [
+          "requestPage"
+        ],
+        "consequence": "The corresponding detail remains unconfirmed.",
+        "options": [],
+        "assumptions": [],
+        "confirmingFunction": "Facilities owner",
+        "blocking": true
+      },
+      "refs": [
+        {
+          "relation": "target",
+          "target": "requestPage",
+          "type": "interface"
+        }
+      ]
+    },
+    {
+      "id": "uploadQuestion",
+      "type": "question",
+      "title": "What field specification applies to the equipment photograph upload?",
+      "purpose": "What field specification applies to the equipment photograph upload?",
+      "status": "proposed",
+      "detail": {
+        "scope": [
+          "inspectionUpload"
+        ],
+        "consequence": "The corresponding detail remains unconfirmed.",
+        "options": [],
+        "assumptions": [],
+        "confirmingFunction": "Facilities owner",
+        "blocking": true
+      },
+      "refs": [
+        {
+          "relation": "target",
+          "target": "inspectionUpload",
+          "type": "element"
+        }
+      ]
+    },
+    {
+      "id": "statusQuestion",
+      "type": "question",
+      "title": "What is the complete loan status model?",
+      "purpose": "What is the complete loan status model?",
+      "status": "proposed",
+      "detail": {
+        "scope": [
+          "loans"
+        ],
+        "consequence": "The corresponding detail remains unconfirmed.",
+        "options": [],
+        "assumptions": [],
+        "confirmingFunction": "Facilities owner",
+        "blocking": true
+      },
+      "refs": [
+        {
+          "relation": "target",
+          "target": "loans",
+          "type": "service"
+        }
+      ]
+    },
+    {
+      "id": "processQuestion",
+      "type": "question",
+      "title": "What are the inventory operation details?",
+      "purpose": "What are the inventory operation details?",
+      "status": "proposed",
+      "detail": {
+        "scope": [
+          "record"
+        ],
+        "consequence": "The corresponding detail remains unconfirmed.",
+        "options": [],
+        "assumptions": [],
+        "confirmingFunction": "Facilities owner",
+        "blocking": true
+      },
+      "refs": [
+        {
+          "relation": "target",
+          "target": "record",
+          "type": "activity"
+        }
+      ]
+    },
+    {
+      "id": "ruleQuestion",
+      "type": "question",
+      "title": "What are the rule boundaries and examples?",
+      "purpose": "What are the rule boundaries and examples?",
+      "status": "proposed",
+      "detail": {
+        "scope": [
+          "dateRule"
+        ],
+        "consequence": "The corresponding detail remains unconfirmed.",
+        "options": [],
+        "assumptions": [],
+        "confirmingFunction": "Facilities owner",
+        "blocking": true
+      },
+      "refs": [
+        {
+          "relation": "target",
+          "target": "dateRule",
+          "type": "rule"
+        }
+      ]
+    },
+    {
+      "id": "auditQuestion",
+      "type": "question",
+      "title": "Which loan events and details must be audited?",
+      "purpose": "Which loan events and details must be audited?",
+      "status": "proposed",
+      "detail": {
+        "scope": [
+          "loans"
+        ],
+        "consequence": "The corresponding detail remains unconfirmed.",
+        "options": [],
+        "assumptions": [],
+        "confirmingFunction": "Facilities owner",
+        "blocking": true
+      },
+      "refs": [
+        {
+          "relation": "target",
+          "target": "loans",
+          "type": "service"
+        }
+      ]
+    },
+    {
+      "id": "accessQuestion",
+      "type": "question",
+      "title": "What access restrictions apply to loan requests?",
+      "purpose": "What access restrictions apply to loan requests?",
+      "status": "proposed",
+      "detail": {
+        "scope": [
+          "loans"
+        ],
+        "consequence": "The corresponding detail remains unconfirmed.",
+        "options": [],
+        "assumptions": [],
+        "confirmingFunction": "Facilities owner",
+        "blocking": true
+      },
+      "refs": [
+        {
+          "relation": "target",
+          "target": "loans",
+          "type": "service"
+        }
+      ]
+    },
+    {
+      "id": "integrityQuestion",
+      "type": "question",
+      "title": "What integrity and locking rules apply to loan requests?",
+      "purpose": "What integrity and locking rules apply to loan requests?",
+      "status": "proposed",
+      "detail": {
+        "scope": [
+          "loans"
+        ],
+        "consequence": "The corresponding detail remains unconfirmed.",
+        "options": [],
+        "assumptions": [],
+        "confirmingFunction": "Facilities owner",
+        "blocking": true
+      },
+      "refs": [
+        {
+          "relation": "target",
+          "target": "loans",
+          "type": "service"
+        }
+      ]
+    },
+    {
+      "id": "submitButton",
+      "type": "element",
+      "title": "Submit request",
+      "purpose": "Submit request",
+      "status": "proposed",
+      "detail": {
+        "kind": "button",
+        "behavior": "Submits the equipment request"
+      },
+      "parent": "requestPage"
+    },
+    {
+      "id": "photoSource",
+      "type": "source",
+      "title": "Synthetic interface note",
+      "purpose": "Record the upload control",
+      "status": "reference",
+      "detail": {},
+      "source": {
+        "recordKey": "photoSource",
+        "text": "The request page includes an equipment photograph upload.",
+        "locator": "note",
+        "version": "1",
+        "sha256": "4064a8fdb43b66c408e3d885fb78e25a40243c743cc69c3ccadaf9894e83f0ef"
+      }
+    },
+    {
+      "id": "inspectionUpload",
+      "type": "element",
+      "title": "Equipment photograph",
+      "purpose": "Equipment photograph",
+      "status": "proposed",
+      "detail": {
+        "kind": "upload",
+        "behavior": "An equipment photograph may be attached"
+      },
+      "parent": "requestPage",
+      "refs": [
+        {
+          "relation": "derivedFrom",
+          "target": "photoSource",
+          "type": "source",
+          "locator": "note",
+          "quote": "The request page includes an equipment photograph upload.",
+          "interpretation": "The page has an upload control."
+        }
+      ]
+    },
+    {
+      "id": "loanEntity",
+      "type": "entity",
+      "title": "Loan record",
+      "purpose": "Loan record",
+      "status": "proposed",
+      "detail": {}
+    },
+    {
+      "id": "pendingState",
+      "type": "state",
+      "title": "Pending",
+      "purpose": "Pending",
+      "status": "proposed",
+      "detail": {},
+      "parent": "loanEntity"
+    },
+    {
+      "id": "checkedOutState",
+      "type": "state",
+      "title": "Checked out",
+      "purpose": "Checked out",
+      "status": "proposed",
+      "detail": {},
+      "parent": "loanEntity"
+    },
+    {
+      "id": "checkoutTransition",
+      "type": "transition",
+      "title": "Record checkout",
+      "purpose": "Record checkout",
+      "status": "proposed",
+      "detail": {
+        "trigger": "Inventory records checkout"
+      },
+      "parent": "loanEntity",
+      "refs": [
+        {
+          "relation": "from",
+          "target": "pendingState",
+          "type": "state"
+        },
+        {
+          "relation": "to",
+          "target": "checkedOutState",
+          "type": "state"
+        },
+        {
+          "relation": "actor",
+          "target": "inventory",
+          "type": "role"
+        },
+        {
+          "relation": "action",
+          "target": "recordAction",
+          "type": "action"
+        }
+      ]
+    },
+    {
+      "id": "inventoryLink",
+      "type": "integration",
+      "title": "Inventory connection",
+      "purpose": "Inventory connection",
+      "status": "proposed",
+      "detail": {
+        "contracts": {
+          "output": {
+            "value": "Mark equipment checked out"
+          },
+          "errors": {
+            "value": "Keep the request pending when inventory is unavailable"
+          }
+        }
+      }
+    }
+  ],
+  "profile": {
+    "id": "profile",
+    "version": "1",
+    "components": [
+      {
+        "id": "all",
+        "version": 1,
+        "type": "overview",
+        "heading": "Equipment",
+        "selector": {
+          "types": [
+            "project",
+            "service",
+            "role",
+            "activity",
+            "interface",
+            "field",
+            "binding",
+            "rule",
+            "action",
+            "question",
+            "source"
+          ]
+        },
+        "requiredWhen": "selected",
+        "gapPolicy": "include",
+        "clientProjection": "include",
+        "outputs": [
+          "workspace",
+          "document"
+        ]
+      }
+    ],
+    "productDocument": {
+      "version": 2,
+      "key": "facilities-equipment",
+      "language": "en",
+      "modules": [
+        {
+          "id": "facilitiesModule",
+          "title": "Facilities",
+          "subModules": [
+            {
+              "id": "borrowing",
+              "title": "Borrowing",
+              "features": [
+                {
+                  "id": "checkoutFeature",
+                  "key": "equipment-checkout",
+                  "title": "Equipment checkout",
+                  "service": "loans",
+                  "status": "detailed",
+                  "summary": {
+                    "text": "Request, review and record a loan.",
+                    "reviewed": [
+                      {
+                        "object": "loans",
+                        "sha256": "51a59355d0cb226305459e178ff8dbc5ce92cb52e76ea53b1e2d283d3a6dd3e6"
+                      }
+                    ]
+                  },
+                  "workflow": {
+                    "view": "checkoutFlow",
+                    "caption": "Equipment checkout workflow"
+                  },
+                  "actions": [
+                    {
+                      "id": "requestAction",
+                      "activity": "request",
+                      "performer": "external",
+                      "summary": {
+                        "text": "The borrower submits equipment and return details.",
+                        "reviewed": [
+                          {
+                            "object": "request",
+                            "sha256": "d5d14e54e711ab3bbb3760a060c8fd1c73e85a52fecd8a24210bbd13289c2579"
+                          },
+                          {
+                            "object": "borrower",
+                            "sha256": "ef7a1fc4de2beb3aa4389daf9341aa0aef15415bfa4b4c47f89edc2d476a41e5"
+                          },
+                          {
+                            "object": "requestPage",
+                            "sha256": "bd99e2344cdd5d544663eeacadb2cf4c4752b1e9bab9a892b8806b2424ccb5ad"
+                          }
+                        ]
+                      },
+                      "pages": [
+                        {
+                          "id": "requestPageAnchor",
+                          "interface": "requestPage",
+                          "groups": [
+                            {
+                              "id": "requestGroup",
+                              "title": "Request details",
+                              "summary": {
+                                "text": "Collect equipment and return details.",
+                                "reviewed": [
+                                  {
+                                    "object": "item",
+                                    "sha256": "102c3e142425c2cc7d625a36c1be02a967e432762b5b179aef41e2ea0be9eaae"
+                                  },
+                                  {
+                                    "object": "date",
+                                    "sha256": "2a77aa37bd5efef13ea2faa6ec488a082ef794cb6e9d4e90ff1d71e7b19df474"
+                                  },
+                                  {
+                                    "object": "itemInput",
+                                    "sha256": "8dc3c476ef2bb8dc98205c09baeba4f42847836461db568a580f674332a0e5ab"
+                                  },
+                                  {
+                                    "object": "dateInput",
+                                    "sha256": "564582aebf71dd30c0da2eb1b3ed27c9efa314f1f2176f76e808ab033db4704d"
+                                  },
+                                  {
+                                    "object": "dateRule",
+                                    "sha256": "22092276111fabc253e880cb8bb1185242881d51dd8653e06d2805674563e50a"
+                                  },
+                                  {
+                                    "object": "submitButton",
+                                    "sha256": "eb601887fbfc85bf0b29c34664e86a4947a85fe8eb0fa445bdcd6ac32db60d6d"
+                                  },
+                                  {
+                                    "object": "inspectionUpload",
+                                    "sha256": "055808b28d837b60c3c7357ff4808c4400587b21eea06849a9e8830e238a67b1"
+                                  },
+                                  {
+                                    "object": "requestPage",
+                                    "sha256": "bd99e2344cdd5d544663eeacadb2cf4c4752b1e9bab9a892b8806b2424ccb5ad"
+                                  }
+                                ]
+                              },
+                              "sources": [
+                                "item",
+                                "date",
+                                "itemInput",
+                                "dateInput",
+                                "dateRule",
+                                "submitButton",
+                                "inspectionUpload"
+                              ],
+                              "fields": [
+                                "Equipment",
+                                "Return date"
+                              ],
+                              "rules": [
+                                "Temporary equipment requires a return date; return an unknown date for clarification."
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "groups": [],
+                      "questions": [
+                        "operatorQuestion"
+                      ]
+                    },
+                    {
+                      "id": "reviewAction",
+                      "activity": "review",
+                      "performer": "user",
+                      "summary": {
+                        "text": "Staff approve the request or return it for clarification.",
+                        "reviewed": [
+                          {
+                            "object": "review",
+                            "sha256": "e4f46eefac8ca90654eff8534af0bd2c147315bb47430154b0412068fd7e8dac"
+                          },
+                          {
+                            "object": "staff",
+                            "sha256": "4deffc512868bdec20c0868b0311f4ac11d26301c990ac691623e4fa6bd28823"
+                          }
+                        ]
+                      },
+                      "pages": [],
+                      "groups": []
+                    },
+                    {
+                      "id": "inventoryAction",
+                      "activity": "record",
+                      "performer": "system",
+                      "summary": {
+                        "text": "The inventory system records the checkout.",
+                        "reviewed": [
+                          {
+                            "object": "record",
+                            "sha256": "b2ae1dfced5aed87f30e89876d4c9905cca159b939c9293a89b5edb2418517e6"
+                          },
+                          {
+                            "object": "recordAction",
+                            "sha256": "7fce99c317a27fb88644bfe0510ef6b163e60ea3113d8c7aa1840e40d54206ff"
+                          },
+                          {
+                            "object": "inventory",
+                            "sha256": "e6dcbfea965a0addde2096d6dc1840ba2e11514ef250513346cbb4bc44cd89ad"
+                          },
+                          {
+                            "object": "inventoryLink",
+                            "sha256": "cc62d8e8bfb6850a70c0ebaf621895f827991b27b51d49b9278af6caa2094872"
+                          },
+                          {
+                            "object": "pendingState",
+                            "sha256": "b0073c55b3fda5f37d18829b26cbe067f2fabee4670d7588badaedb01f6ed5bc"
+                          },
+                          {
+                            "object": "checkedOutState",
+                            "sha256": "25c07774d5d8b1769081a41fa81a2762cd84c1d7401276c2cd35ab7942e1e434"
+                          }
+                        ]
+                      },
+                      "pages": [],
+                      "groups": [
+                        {
+                          "id": "inventoryGroup",
+                          "title": "Inventory update",
+                          "summary": {
+                            "text": "Mark the equipment checked out; if inventory is unavailable keep the request pending.",
+                            "reviewed": [
+                              {
+                                "object": "recordAction",
+                                "sha256": "7fce99c317a27fb88644bfe0510ef6b163e60ea3113d8c7aa1840e40d54206ff"
+                              },
+                              {
+                                "object": "inventory",
+                                "sha256": "e6dcbfea965a0addde2096d6dc1840ba2e11514ef250513346cbb4bc44cd89ad"
+                              },
+                              {
+                                "object": "inventoryLink",
+                                "sha256": "cc62d8e8bfb6850a70c0ebaf621895f827991b27b51d49b9278af6caa2094872"
+                              },
+                              {
+                                "object": "pendingState",
+                                "sha256": "b0073c55b3fda5f37d18829b26cbe067f2fabee4670d7588badaedb01f6ed5bc"
+                              },
+                              {
+                                "object": "checkedOutState",
+                                "sha256": "25c07774d5d8b1769081a41fa81a2762cd84c1d7401276c2cd35ab7942e1e434"
+                              }
+                            ]
+                          },
+                          "sources": [
+                            "recordAction"
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "standard": {
+                    "priority": {
+                      "question": "scopeQuestion"
+                    },
+                    "readiness": "Low",
+                    "featureDescription": {
+                      "text": "Request, review and record an equipment loan.",
+                      "reviewed": [
+                        {
+                          "object": "loans",
+                          "sha256": "51a59355d0cb226305459e178ff8dbc5ce92cb52e76ea53b1e2d283d3a6dd3e6"
+                        }
+                      ]
+                    },
+                    "note": {
+                      "question": "scopeQuestion"
+                    },
+                    "changes": [
+                      {
+                        "version": "1.1",
+                        "references": [
+                          {
+                            "text": "Synthetic research note v1.",
+                            "reviewed": [
+                              {
+                                "object": "source",
+                                "sha256": "02a1f5368b0bbe39827d373833f43500da9b96024873451647c3e542f436e673"
+                              }
+                            ]
+                          }
+                        ],
+                        "items": [
+                          {
+                            "text": "Clarify inventory failure.",
+                            "reviewed": [
+                              {
+                                "object": "recordAction",
+                                "sha256": "7fce99c317a27fb88644bfe0510ef6b163e60ea3113d8c7aa1840e40d54206ff"
+                              },
+                              {
+                                "object": "inventory",
+                                "sha256": "e6dcbfea965a0addde2096d6dc1840ba2e11514ef250513346cbb4bc44cd89ad"
+                              },
+                              {
+                                "object": "inventoryLink",
+                                "sha256": "cc62d8e8bfb6850a70c0ebaf621895f827991b27b51d49b9278af6caa2094872"
+                              },
+                              {
+                                "object": "pendingState",
+                                "sha256": "b0073c55b3fda5f37d18829b26cbe067f2fabee4670d7588badaedb01f6ed5bc"
+                              },
+                              {
+                                "object": "checkedOutState",
+                                "sha256": "25c07774d5d8b1769081a41fa81a2762cd84c1d7401276c2cd35ab7942e1e434"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ],
+                    "sections": [
+                      {
+                        "section": "Description",
+                        "content": {
+                          "text": "Borrowers request equipment, staff review the request and inventory records the checkout.",
+                          "reviewed": [
+                            {
+                              "object": "request",
+                              "sha256": "d5d14e54e711ab3bbb3760a060c8fd1c73e85a52fecd8a24210bbd13289c2579"
+                            },
+                            {
+                              "object": "review",
+                              "sha256": "e4f46eefac8ca90654eff8534af0bd2c147315bb47430154b0412068fd7e8dac"
+                            },
+                            {
+                              "object": "record",
+                              "sha256": "b2ae1dfced5aed87f30e89876d4c9905cca159b939c9293a89b5edb2418517e6"
+                            },
+                            {
+                              "object": "borrower",
+                              "sha256": "ef7a1fc4de2beb3aa4389daf9341aa0aef15415bfa4b4c47f89edc2d476a41e5"
+                            },
+                            {
+                              "object": "requestPage",
+                              "sha256": "bd99e2344cdd5d544663eeacadb2cf4c4752b1e9bab9a892b8806b2424ccb5ad"
+                            },
+                            {
+                              "object": "staff",
+                              "sha256": "4deffc512868bdec20c0868b0311f4ac11d26301c990ac691623e4fa6bd28823"
+                            },
+                            {
+                              "object": "recordAction",
+                              "sha256": "7fce99c317a27fb88644bfe0510ef6b163e60ea3113d8c7aa1840e40d54206ff"
+                            },
+                            {
+                              "object": "inventory",
+                              "sha256": "e6dcbfea965a0addde2096d6dc1840ba2e11514ef250513346cbb4bc44cd89ad"
+                            },
+                            {
+                              "object": "inventoryLink",
+                              "sha256": "cc62d8e8bfb6850a70c0ebaf621895f827991b27b51d49b9278af6caa2094872"
+                            },
+                            {
+                              "object": "pendingState",
+                              "sha256": "b0073c55b3fda5f37d18829b26cbe067f2fabee4670d7588badaedb01f6ed5bc"
+                            },
+                            {
+                              "object": "checkedOutState",
+                              "sha256": "25c07774d5d8b1769081a41fa81a2762cd84c1d7401276c2cd35ab7942e1e434"
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "section": "Preconditions",
+                        "conditions": [
+                          {
+                            "question": "scopeQuestion"
+                          }
+                        ]
+                      },
+                      {
+                        "section": "Postconditions",
+                        "success": [
+                          {
+                            "text": "Inventory marks equipment checked out.",
+                            "reviewed": [
+                              {
+                                "object": "recordAction",
+                                "sha256": "7fce99c317a27fb88644bfe0510ef6b163e60ea3113d8c7aa1840e40d54206ff"
+                              },
+                              {
+                                "object": "inventory",
+                                "sha256": "e6dcbfea965a0addde2096d6dc1840ba2e11514ef250513346cbb4bc44cd89ad"
+                              },
+                              {
+                                "object": "inventoryLink",
+                                "sha256": "cc62d8e8bfb6850a70c0ebaf621895f827991b27b51d49b9278af6caa2094872"
+                              },
+                              {
+                                "object": "pendingState",
+                                "sha256": "b0073c55b3fda5f37d18829b26cbe067f2fabee4670d7588badaedb01f6ed5bc"
+                              },
+                              {
+                                "object": "checkedOutState",
+                                "sha256": "25c07774d5d8b1769081a41fa81a2762cd84c1d7401276c2cd35ab7942e1e434"
+                              }
+                            ]
+                          }
+                        ],
+                        "rejection": [
+                          {
+                            "question": "scopeQuestion"
+                          }
+                        ],
+                        "cancellation": [
+                          {
+                            "question": "scopeQuestion"
+                          }
+                        ],
+                        "failure": [
+                          {
+                            "text": "Inventory unavailability leaves the request pending.",
+                            "reviewed": [
+                              {
+                                "object": "recordAction",
+                                "sha256": "7fce99c317a27fb88644bfe0510ef6b163e60ea3113d8c7aa1840e40d54206ff"
+                              },
+                              {
+                                "object": "inventory",
+                                "sha256": "e6dcbfea965a0addde2096d6dc1840ba2e11514ef250513346cbb4bc44cd89ad"
+                              },
+                              {
+                                "object": "inventoryLink",
+                                "sha256": "cc62d8e8bfb6850a70c0ebaf621895f827991b27b51d49b9278af6caa2094872"
+                              },
+                              {
+                                "object": "pendingState",
+                                "sha256": "b0073c55b3fda5f37d18829b26cbe067f2fabee4670d7588badaedb01f6ed5bc"
+                              },
+                              {
+                                "object": "checkedOutState",
+                                "sha256": "25c07774d5d8b1769081a41fa81a2762cd84c1d7401276c2cd35ab7942e1e434"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "section": "Role based workflow map",
+                        "steps": [
+                          {
+                            "number": "1",
+                            "node": "requestNode",
+                            "activity": "request",
+                            "role": "borrower",
+                            "block": "S1",
+                            "action": {
+                              "text": "Submit an equipment request.",
+                              "reviewed": [
+                                {
+                                  "object": "request",
+                                  "sha256": "d5d14e54e711ab3bbb3760a060c8fd1c73e85a52fecd8a24210bbd13289c2579"
+                                },
+                                {
+                                  "object": "borrower",
+                                  "sha256": "ef7a1fc4de2beb3aa4389daf9341aa0aef15415bfa4b4c47f89edc2d476a41e5"
+                                },
+                                {
+                                  "object": "requestPage",
+                                  "sha256": "bd99e2344cdd5d544663eeacadb2cf4c4752b1e9bab9a892b8806b2424ccb5ad"
+                                }
+                              ]
+                            },
+                            "response": {
+                              "text": "Record the request.",
+                              "reviewed": [
+                                {
+                                  "object": "request",
+                                  "sha256": "d5d14e54e711ab3bbb3760a060c8fd1c73e85a52fecd8a24210bbd13289c2579"
+                                },
+                                {
+                                  "object": "borrower",
+                                  "sha256": "ef7a1fc4de2beb3aa4389daf9341aa0aef15415bfa4b4c47f89edc2d476a41e5"
+                                },
+                                {
+                                  "object": "requestPage",
+                                  "sha256": "bd99e2344cdd5d544663eeacadb2cf4c4752b1e9bab9a892b8806b2424ccb5ad"
+                                }
+                              ]
+                            },
+                            "rules": [
+                              {
+                                "question": "fieldQuestion"
+                              }
+                            ],
+                            "businessRules": [
+                              "BR-1"
+                            ]
+                          },
+                          {
+                            "number": "2",
+                            "node": "reviewNode",
+                            "activity": "review",
+                            "role": "staff",
+                            "block": "S2",
+                            "action": {
+                              "text": "Review the request.",
+                              "reviewed": [
+                                {
+                                  "object": "review",
+                                  "sha256": "e4f46eefac8ca90654eff8534af0bd2c147315bb47430154b0412068fd7e8dac"
+                                },
+                                {
+                                  "object": "staff",
+                                  "sha256": "4deffc512868bdec20c0868b0311f4ac11d26301c990ac691623e4fa6bd28823"
+                                }
+                              ]
+                            },
+                            "response": {
+                              "text": "Approve or return it for clarification.",
+                              "reviewed": [
+                                {
+                                  "object": "review",
+                                  "sha256": "e4f46eefac8ca90654eff8534af0bd2c147315bb47430154b0412068fd7e8dac"
+                                },
+                                {
+                                  "object": "staff",
+                                  "sha256": "4deffc512868bdec20c0868b0311f4ac11d26301c990ac691623e4fa6bd28823"
+                                }
+                              ]
+                            },
+                            "rules": [
+                              {
+                                "question": "screenQuestion"
+                              }
+                            ],
+                            "businessRules": []
+                          },
+                          {
+                            "number": "3",
+                            "node": "recordNode",
+                            "activity": "record",
+                            "role": "inventory",
+                            "block": "P1",
+                            "action": {
+                              "text": "Record the checkout.",
+                              "reviewed": [
+                                {
+                                  "object": "record",
+                                  "sha256": "b2ae1dfced5aed87f30e89876d4c9905cca159b939c9293a89b5edb2418517e6"
+                                },
+                                {
+                                  "object": "recordAction",
+                                  "sha256": "7fce99c317a27fb88644bfe0510ef6b163e60ea3113d8c7aa1840e40d54206ff"
+                                },
+                                {
+                                  "object": "inventory",
+                                  "sha256": "e6dcbfea965a0addde2096d6dc1840ba2e11514ef250513346cbb4bc44cd89ad"
+                                },
+                                {
+                                  "object": "inventoryLink",
+                                  "sha256": "cc62d8e8bfb6850a70c0ebaf621895f827991b27b51d49b9278af6caa2094872"
+                                },
+                                {
+                                  "object": "pendingState",
+                                  "sha256": "b0073c55b3fda5f37d18829b26cbe067f2fabee4670d7588badaedb01f6ed5bc"
+                                },
+                                {
+                                  "object": "checkedOutState",
+                                  "sha256": "25c07774d5d8b1769081a41fa81a2762cd84c1d7401276c2cd35ab7942e1e434"
+                                }
+                              ]
+                            },
+                            "response": {
+                              "text": "Mark equipment checked out or keep the request pending.",
+                              "reviewed": [
+                                {
+                                  "object": "record",
+                                  "sha256": "b2ae1dfced5aed87f30e89876d4c9905cca159b939c9293a89b5edb2418517e6"
+                                },
+                                {
+                                  "object": "recordAction",
+                                  "sha256": "7fce99c317a27fb88644bfe0510ef6b163e60ea3113d8c7aa1840e40d54206ff"
+                                },
+                                {
+                                  "object": "inventory",
+                                  "sha256": "e6dcbfea965a0addde2096d6dc1840ba2e11514ef250513346cbb4bc44cd89ad"
+                                },
+                                {
+                                  "object": "inventoryLink",
+                                  "sha256": "cc62d8e8bfb6850a70c0ebaf621895f827991b27b51d49b9278af6caa2094872"
+                                },
+                                {
+                                  "object": "pendingState",
+                                  "sha256": "b0073c55b3fda5f37d18829b26cbe067f2fabee4670d7588badaedb01f6ed5bc"
+                                },
+                                {
+                                  "object": "checkedOutState",
+                                  "sha256": "25c07774d5d8b1769081a41fa81a2762cd84c1d7401276c2cd35ab7942e1e434"
+                                }
+                              ]
+                            },
+                            "rules": [
+                              {
+                                "question": "processQuestion"
+                              }
+                            ],
+                            "businessRules": []
+                          }
+                        ],
+                        "statusModel": {
+                          "completeness": "incomplete",
+                          "question": "statusQuestion",
+                          "states": [
+                            {
+                              "state": "pendingState",
+                              "meaning": {
+                                "text": "The request is pending.",
+                                "reviewed": [
+                                  {
+                                    "object": "pendingState",
+                                    "sha256": "b0073c55b3fda5f37d18829b26cbe067f2fabee4670d7588badaedb01f6ed5bc"
+                                  }
+                                ]
+                              },
+                              "initial": true
+                            },
+                            {
+                              "state": "checkedOutState",
+                              "meaning": {
+                                "text": "Equipment is checked out.",
+                                "reviewed": [
+                                  {
+                                    "object": "checkedOutState",
+                                    "sha256": "25c07774d5d8b1769081a41fa81a2762cd84c1d7401276c2cd35ab7942e1e434"
+                                  }
+                                ]
+                              },
+                              "initial": false
+                            }
+                          ],
+                          "transitions": [
+                            {
+                              "transition": "checkoutTransition",
+                              "from": "pendingState",
+                              "to": "checkedOutState",
+                              "step": "3",
+                              "role": "inventory",
+                              "action": {
+                                "text": "Record checkout.",
+                                "reviewed": [
+                                  {
+                                    "object": "checkoutTransition",
+                                    "sha256": "c1781d01d5ff217cdd44684347b03d06a20a6a7599ea0da991733daa1c433654"
+                                  },
+                                  {
+                                    "object": "inventory",
+                                    "sha256": "e6dcbfea965a0addde2096d6dc1840ba2e11514ef250513346cbb4bc44cd89ad"
+                                  },
+                                  {
+                                    "object": "recordAction",
+                                    "sha256": "7fce99c317a27fb88644bfe0510ef6b163e60ea3113d8c7aa1840e40d54206ff"
+                                  },
+                                  {
+                                    "object": "pendingState",
+                                    "sha256": "b0073c55b3fda5f37d18829b26cbe067f2fabee4670d7588badaedb01f6ed5bc"
+                                  },
+                                  {
+                                    "object": "checkedOutState",
+                                    "sha256": "25c07774d5d8b1769081a41fa81a2762cd84c1d7401276c2cd35ab7942e1e434"
+                                  },
+                                  {
+                                    "object": "inventoryLink",
+                                    "sha256": "cc62d8e8bfb6850a70c0ebaf621895f827991b27b51d49b9278af6caa2094872"
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "section": "Prototype with UI elements & rules",
+                        "screens": [
+                          {
+                            "kind": "screen",
+                            "id": "S1",
+                            "page": "requestPageAnchor",
+                            "interface": "requestPage",
+                            "design": {
+                              "question": "fieldQuestion"
+                            },
+                            "assets": [],
+                            "elements": [
+                              "submitButton",
+                              "inspectionUpload"
+                            ],
+                            "pageRules": [
+                              {
+                                "question": "fieldQuestion"
+                              }
+                            ],
+                            "fields": [
+                              {
+                                "field": "item",
+                                "binding": "itemInput",
+                                "dataType": "Text",
+                                "typeDetails": {
+                                  "question": "fieldQuestion"
+                                },
+                                "required": "Yes",
+                                "default": {
+                                  "question": "fieldQuestion"
+                                },
+                                "rules": {
+                                  "question": "fieldQuestion"
+                                },
+                                "source": {
+                                  "question": "fieldQuestion"
+                                },
+                                "editableWhen": {
+                                  "text": "Editable on the request form.",
+                                  "reviewed": [
+                                    {
+                                      "object": "itemInput",
+                                      "sha256": "8dc3c476ef2bb8dc98205c09baeba4f42847836461db568a580f674332a0e5ab"
+                                    },
+                                    {
+                                      "object": "item",
+                                      "sha256": "102c3e142425c2cc7d625a36c1be02a967e432762b5b179aef41e2ea0be9eaae"
+                                    }
+                                  ]
+                                },
+                                "businessRules": []
+                              },
+                              {
+                                "field": "date",
+                                "binding": "dateInput",
+                                "dataType": "Text",
+                                "typeDetails": {
+                                  "question": "fieldQuestion"
+                                },
+                                "required": "Conditional",
+                                "default": {
+                                  "question": "fieldQuestion"
+                                },
+                                "rules": {
+                                  "text": "Required for temporary equipment; an unknown date is returned for clarification.",
+                                  "reviewed": [
+                                    {
+                                      "object": "dateRule",
+                                      "sha256": "22092276111fabc253e880cb8bb1185242881d51dd8653e06d2805674563e50a"
+                                    },
+                                    {
+                                      "object": "requestPage",
+                                      "sha256": "bd99e2344cdd5d544663eeacadb2cf4c4752b1e9bab9a892b8806b2424ccb5ad"
+                                    },
+                                    {
+                                      "object": "item",
+                                      "sha256": "102c3e142425c2cc7d625a36c1be02a967e432762b5b179aef41e2ea0be9eaae"
+                                    },
+                                    {
+                                      "object": "date",
+                                      "sha256": "2a77aa37bd5efef13ea2faa6ec488a082ef794cb6e9d4e90ff1d71e7b19df474"
+                                    }
+                                  ]
+                                },
+                                "source": {
+                                  "question": "fieldQuestion"
+                                },
+                                "editableWhen": {
+                                  "text": "Editable on the request form.",
+                                  "reviewed": [
+                                    {
+                                      "object": "dateInput",
+                                      "sha256": "564582aebf71dd30c0da2eb1b3ed27c9efa314f1f2176f76e808ab033db4704d"
+                                    },
+                                    {
+                                      "object": "date",
+                                      "sha256": "2a77aa37bd5efef13ea2faa6ec488a082ef794cb6e9d4e90ff1d71e7b19df474"
+                                    },
+                                    {
+                                      "object": "dateRule",
+                                      "sha256": "22092276111fabc253e880cb8bb1185242881d51dd8653e06d2805674563e50a"
+                                    },
+                                    {
+                                      "object": "item",
+                                      "sha256": "102c3e142425c2cc7d625a36c1be02a967e432762b5b179aef41e2ea0be9eaae"
+                                    },
+                                    {
+                                      "object": "requestPage",
+                                      "sha256": "bd99e2344cdd5d544663eeacadb2cf4c4752b1e9bab9a892b8806b2424ccb5ad"
+                                    }
+                                  ]
+                                },
+                                "businessRules": [
+                                  "BR-1"
+                                ]
+                              },
+                              {
+                                "element": "inspectionUpload",
+                                "question": "uploadQuestion"
+                              }
+                            ],
+                            "actionMatrix": [
+                              {
+                                "state": "pendingState",
+                                "role": "borrower",
+                                "actions": [
+                                  "submitButton"
+                                ],
+                                "condition": {
+                                  "question": "fieldQuestion"
+                                }
+                              }
+                            ],
+                            "buttons": [
+                              {
+                                "element": "submitButton",
+                                "visibility": {
+                                  "question": "fieldQuestion"
+                                },
+                                "enabled": {
+                                  "question": "fieldQuestion"
+                                },
+                                "behavior": {
+                                  "text": "Submits the equipment request.",
+                                  "reviewed": [
+                                    {
+                                      "object": "submitButton",
+                                      "sha256": "eb601887fbfc85bf0b29c34664e86a4947a85fe8eb0fa445bdcd6ac32db60d6d"
+                                    }
+                                  ]
+                                }
+                              }
+                            ],
+                            "messages": [
+                              {
+                                "question": "fieldQuestion"
+                              }
+                            ]
+                          },
+                          {
+                            "kind": "missing-screen",
+                            "id": "S2",
+                            "question": "screenQuestion"
+                          }
+                        ],
+                        "processes": [
+                          {
+                            "id": "P1",
+                            "title": {
+                              "text": "Record checkout",
+                              "reviewed": [
+                                {
+                                  "object": "record",
+                                  "sha256": "b2ae1dfced5aed87f30e89876d4c9905cca159b939c9293a89b5edb2418517e6"
+                                },
+                                {
+                                  "object": "recordAction",
+                                  "sha256": "7fce99c317a27fb88644bfe0510ef6b163e60ea3113d8c7aa1840e40d54206ff"
+                                },
+                                {
+                                  "object": "inventory",
+                                  "sha256": "e6dcbfea965a0addde2096d6dc1840ba2e11514ef250513346cbb4bc44cd89ad"
+                                },
+                                {
+                                  "object": "inventoryLink",
+                                  "sha256": "cc62d8e8bfb6850a70c0ebaf621895f827991b27b51d49b9278af6caa2094872"
+                                },
+                                {
+                                  "object": "pendingState",
+                                  "sha256": "b0073c55b3fda5f37d18829b26cbe067f2fabee4670d7588badaedb01f6ed5bc"
+                                },
+                                {
+                                  "object": "checkedOutState",
+                                  "sha256": "25c07774d5d8b1769081a41fa81a2762cd84c1d7401276c2cd35ab7942e1e434"
+                                }
+                              ]
+                            },
+                            "trigger": {
+                              "question": "processQuestion"
+                            },
+                            "input": {
+                              "question": "processQuestion"
+                            },
+                            "processing": {
+                              "text": "Mark equipment checked out.",
+                              "reviewed": [
+                                {
+                                  "object": "recordAction",
+                                  "sha256": "7fce99c317a27fb88644bfe0510ef6b163e60ea3113d8c7aa1840e40d54206ff"
+                                },
+                                {
+                                  "object": "inventory",
+                                  "sha256": "e6dcbfea965a0addde2096d6dc1840ba2e11514ef250513346cbb4bc44cd89ad"
+                                },
+                                {
+                                  "object": "inventoryLink",
+                                  "sha256": "cc62d8e8bfb6850a70c0ebaf621895f827991b27b51d49b9278af6caa2094872"
+                                },
+                                {
+                                  "object": "pendingState",
+                                  "sha256": "b0073c55b3fda5f37d18829b26cbe067f2fabee4670d7588badaedb01f6ed5bc"
+                                },
+                                {
+                                  "object": "checkedOutState",
+                                  "sha256": "25c07774d5d8b1769081a41fa81a2762cd84c1d7401276c2cd35ab7942e1e434"
+                                }
+                              ]
+                            },
+                            "output": {
+                              "text": "Equipment is marked checked out.",
+                              "reviewed": [
+                                {
+                                  "object": "recordAction",
+                                  "sha256": "7fce99c317a27fb88644bfe0510ef6b163e60ea3113d8c7aa1840e40d54206ff"
+                                },
+                                {
+                                  "object": "inventory",
+                                  "sha256": "e6dcbfea965a0addde2096d6dc1840ba2e11514ef250513346cbb4bc44cd89ad"
+                                },
+                                {
+                                  "object": "inventoryLink",
+                                  "sha256": "cc62d8e8bfb6850a70c0ebaf621895f827991b27b51d49b9278af6caa2094872"
+                                },
+                                {
+                                  "object": "pendingState",
+                                  "sha256": "b0073c55b3fda5f37d18829b26cbe067f2fabee4670d7588badaedb01f6ed5bc"
+                                },
+                                {
+                                  "object": "checkedOutState",
+                                  "sha256": "25c07774d5d8b1769081a41fa81a2762cd84c1d7401276c2cd35ab7942e1e434"
+                                }
+                              ]
+                            },
+                            "exceptions": [
+                              {
+                                "id": "inventoryUnavailable",
+                                "description": {
+                                  "text": "Keep the request pending when inventory is unavailable.",
+                                  "reviewed": [
+                                    {
+                                      "object": "recordAction",
+                                      "sha256": "7fce99c317a27fb88644bfe0510ef6b163e60ea3113d8c7aa1840e40d54206ff"
+                                    },
+                                    {
+                                      "object": "inventory",
+                                      "sha256": "e6dcbfea965a0addde2096d6dc1840ba2e11514ef250513346cbb4bc44cd89ad"
+                                    },
+                                    {
+                                      "object": "inventoryLink",
+                                      "sha256": "cc62d8e8bfb6850a70c0ebaf621895f827991b27b51d49b9278af6caa2094872"
+                                    },
+                                    {
+                                      "object": "pendingState",
+                                      "sha256": "b0073c55b3fda5f37d18829b26cbe067f2fabee4670d7588badaedb01f6ed5bc"
+                                    },
+                                    {
+                                      "object": "checkedOutState",
+                                      "sha256": "25c07774d5d8b1769081a41fa81a2762cd84c1d7401276c2cd35ab7942e1e434"
+                                    }
+                                  ]
+                                }
+                              }
+                            ],
+                            "volumeTiming": {
+                              "question": "processQuestion"
+                            },
+                            "humanCheckpoint": {
+                              "question": "processQuestion"
+                            },
+                            "integrations": [
+                              "inventoryLink"
+                            ],
+                            "notifications": [],
+                            "businessRules": []
+                          }
+                        ],
+                        "businessRules": [
+                          {
+                            "id": "BR-1",
+                            "rule": "dateRule",
+                            "name": {
+                              "text": "Return date requirement",
+                              "reviewed": [
+                                {
+                                  "object": "dateRule",
+                                  "sha256": "22092276111fabc253e880cb8bb1185242881d51dd8653e06d2805674563e50a"
+                                },
+                                {
+                                  "object": "requestPage",
+                                  "sha256": "bd99e2344cdd5d544663eeacadb2cf4c4752b1e9bab9a892b8806b2424ccb5ad"
+                                },
+                                {
+                                  "object": "item",
+                                  "sha256": "102c3e142425c2cc7d625a36c1be02a967e432762b5b179aef41e2ea0be9eaae"
+                                },
+                                {
+                                  "object": "date",
+                                  "sha256": "2a77aa37bd5efef13ea2faa6ec488a082ef794cb6e9d4e90ff1d71e7b19df474"
+                                }
+                              ]
+                            },
+                            "steps": [
+                              "1"
+                            ],
+                            "bindings": [
+                              "dateInput"
+                            ],
+                            "appliesTo": {
+                              "text": "Return date on the request form.",
+                              "reviewed": [
+                                {
+                                  "object": "dateRule",
+                                  "sha256": "22092276111fabc253e880cb8bb1185242881d51dd8653e06d2805674563e50a"
+                                },
+                                {
+                                  "object": "requestPage",
+                                  "sha256": "bd99e2344cdd5d544663eeacadb2cf4c4752b1e9bab9a892b8806b2424ccb5ad"
+                                },
+                                {
+                                  "object": "item",
+                                  "sha256": "102c3e142425c2cc7d625a36c1be02a967e432762b5b179aef41e2ea0be9eaae"
+                                },
+                                {
+                                  "object": "date",
+                                  "sha256": "2a77aa37bd5efef13ea2faa6ec488a082ef794cb6e9d4e90ff1d71e7b19df474"
+                                }
+                              ]
+                            },
+                            "inputs": {
+                              "text": "Equipment and return date.",
+                              "reviewed": [
+                                {
+                                  "object": "dateRule",
+                                  "sha256": "22092276111fabc253e880cb8bb1185242881d51dd8653e06d2805674563e50a"
+                                },
+                                {
+                                  "object": "requestPage",
+                                  "sha256": "bd99e2344cdd5d544663eeacadb2cf4c4752b1e9bab9a892b8806b2424ccb5ad"
+                                },
+                                {
+                                  "object": "item",
+                                  "sha256": "102c3e142425c2cc7d625a36c1be02a967e432762b5b179aef41e2ea0be9eaae"
+                                },
+                                {
+                                  "object": "date",
+                                  "sha256": "2a77aa37bd5efef13ea2faa6ec488a082ef794cb6e9d4e90ff1d71e7b19df474"
+                                }
+                              ]
+                            },
+                            "logic": {
+                              "text": "A return date is required for temporary equipment; an unknown date is returned for clarification.",
+                              "reviewed": [
+                                {
+                                  "object": "dateRule",
+                                  "sha256": "22092276111fabc253e880cb8bb1185242881d51dd8653e06d2805674563e50a"
+                                },
+                                {
+                                  "object": "requestPage",
+                                  "sha256": "bd99e2344cdd5d544663eeacadb2cf4c4752b1e9bab9a892b8806b2424ccb5ad"
+                                },
+                                {
+                                  "object": "item",
+                                  "sha256": "102c3e142425c2cc7d625a36c1be02a967e432762b5b179aef41e2ea0be9eaae"
+                                },
+                                {
+                                  "object": "date",
+                                  "sha256": "2a77aa37bd5efef13ea2faa6ec488a082ef794cb6e9d4e90ff1d71e7b19df474"
+                                }
+                              ]
+                            },
+                            "unitsRounding": {
+                              "question": "ruleQuestion"
+                            },
+                            "boundaries": {
+                              "question": "ruleQuestion"
+                            },
+                            "workedExample": {
+                              "text": "For temporary equipment, return date 2027-03-15 satisfies the required-date condition.",
+                              "reviewed": [
+                                {
+                                  "object": "dateRule",
+                                  "sha256": "22092276111fabc253e880cb8bb1185242881d51dd8653e06d2805674563e50a"
+                                },
+                                {
+                                  "object": "requestPage",
+                                  "sha256": "bd99e2344cdd5d544663eeacadb2cf4c4752b1e9bab9a892b8806b2424ccb5ad"
+                                },
+                                {
+                                  "object": "item",
+                                  "sha256": "102c3e142425c2cc7d625a36c1be02a967e432762b5b179aef41e2ea0be9eaae"
+                                },
+                                {
+                                  "object": "date",
+                                  "sha256": "2a77aa37bd5efef13ea2faa6ec488a082ef794cb6e9d4e90ff1d71e7b19df474"
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "section": "Integration points",
+                        "integrations": [
+                          {
+                            "integration": "inventoryLink",
+                            "direction": {
+                              "question": "processQuestion"
+                            },
+                            "trigger": {
+                              "question": "processQuestion"
+                            },
+                            "data": {
+                              "question": "processQuestion"
+                            },
+                            "timing": {
+                              "question": "processQuestion"
+                            },
+                            "failure": {
+                              "text": "The request remains pending when inventory is unavailable.",
+                              "reviewed": [
+                                {
+                                  "object": "inventoryLink",
+                                  "sha256": "cc62d8e8bfb6850a70c0ebaf621895f827991b27b51d49b9278af6caa2094872"
+                                }
+                              ]
+                            }
+                          }
+                        ],
+                        "notifications": []
+                      },
+                      {
+                        "section": "Audit & Security",
+                        "audit": [
+                          {
+                            "question": "auditQuestion"
+                          }
+                        ],
+                        "access": [
+                          {
+                            "question": "accessQuestion"
+                          }
+                        ],
+                        "integrity": [
+                          {
+                            "question": "integrityQuestion"
+                          }
+                        ]
+                      },
+                      {
+                        "section": "Acceptance Criteria",
+                        "criteria": [
+                          {
+                            "id": "pendingOnFailure",
+                            "observation": {
+                              "text": "When inventory is unavailable, the request remains pending.",
+                              "reviewed": [
+                                {
+                                  "object": "recordAction",
+                                  "sha256": "7fce99c317a27fb88644bfe0510ef6b163e60ea3113d8c7aa1840e40d54206ff"
+                                },
+                                {
+                                  "object": "inventory",
+                                  "sha256": "e6dcbfea965a0addde2096d6dc1840ba2e11514ef250513346cbb4bc44cd89ad"
+                                },
+                                {
+                                  "object": "inventoryLink",
+                                  "sha256": "cc62d8e8bfb6850a70c0ebaf621895f827991b27b51d49b9278af6caa2094872"
+                                },
+                                {
+                                  "object": "pendingState",
+                                  "sha256": "b0073c55b3fda5f37d18829b26cbe067f2fabee4670d7588badaedb01f6ed5bc"
+                                },
+                                {
+                                  "object": "checkedOutState",
+                                  "sha256": "25c07774d5d8b1769081a41fa81a2762cd84c1d7401276c2cd35ab7942e1e434"
+                                }
+                              ]
+                            },
+                            "sources": [
+                              "recordAction",
+                              "inventoryLink"
+                            ],
+                            "steps": [
+                              "3"
+                            ],
+                            "blocks": [
+                              "P1"
+                            ],
+                            "businessRules": [],
+                            "transitions": [],
+                            "processExceptions": [
+                              "inventoryUnavailable"
+                            ],
+                            "coverage": [
+                              "process-exception",
+                              "integration"
+                            ]
+                          },
+                          {
+                            "id": "temporaryNeedsDate",
+                            "observation": {
+                              "text": "A temporary equipment request requires a return date.",
+                              "reviewed": [
+                                {
+                                  "object": "dateRule",
+                                  "sha256": "22092276111fabc253e880cb8bb1185242881d51dd8653e06d2805674563e50a"
+                                },
+                                {
+                                  "object": "requestPage",
+                                  "sha256": "bd99e2344cdd5d544663eeacadb2cf4c4752b1e9bab9a892b8806b2424ccb5ad"
+                                },
+                                {
+                                  "object": "item",
+                                  "sha256": "102c3e142425c2cc7d625a36c1be02a967e432762b5b179aef41e2ea0be9eaae"
+                                },
+                                {
+                                  "object": "date",
+                                  "sha256": "2a77aa37bd5efef13ea2faa6ec488a082ef794cb6e9d4e90ff1d71e7b19df474"
+                                }
+                              ]
+                            },
+                            "sources": [
+                              "dateRule",
+                              "dateInput"
+                            ],
+                            "steps": [
+                              "1"
+                            ],
+                            "blocks": [
+                              "S1"
+                            ],
+                            "businessRules": [
+                              "BR-1"
+                            ],
+                            "transitions": [],
+                            "processExceptions": [],
+                            "coverage": [
+                              "field"
+                            ]
+                          },
+                          {
+                            "id": "requestPath",
+                            "observation": {
+                              "text": "The borrower submits an equipment request.",
+                              "reviewed": [
+                                {
+                                  "object": "request",
+                                  "sha256": "d5d14e54e711ab3bbb3760a060c8fd1c73e85a52fecd8a24210bbd13289c2579"
+                                },
+                                {
+                                  "object": "borrower",
+                                  "sha256": "ef7a1fc4de2beb3aa4389daf9341aa0aef15415bfa4b4c47f89edc2d476a41e5"
+                                },
+                                {
+                                  "object": "requestPage",
+                                  "sha256": "bd99e2344cdd5d544663eeacadb2cf4c4752b1e9bab9a892b8806b2424ccb5ad"
+                                }
+                              ]
+                            },
+                            "sources": [
+                              "request"
+                            ],
+                            "steps": [
+                              "1"
+                            ],
+                            "blocks": [
+                              "S1"
+                            ],
+                            "businessRules": [],
+                            "transitions": [],
+                            "processExceptions": [],
+                            "coverage": [
+                              "path"
+                            ]
+                          },
+                          {
+                            "id": "reviewPath",
+                            "observation": {
+                              "text": "Staff approve the request or return it for clarification.",
+                              "reviewed": [
+                                {
+                                  "object": "review",
+                                  "sha256": "e4f46eefac8ca90654eff8534af0bd2c147315bb47430154b0412068fd7e8dac"
+                                },
+                                {
+                                  "object": "staff",
+                                  "sha256": "4deffc512868bdec20c0868b0311f4ac11d26301c990ac691623e4fa6bd28823"
+                                }
+                              ]
+                            },
+                            "sources": [
+                              "review"
+                            ],
+                            "steps": [
+                              "2"
+                            ],
+                            "blocks": [
+                              "S2"
+                            ],
+                            "businessRules": [],
+                            "transitions": [],
+                            "processExceptions": [],
+                            "coverage": [
+                              "path"
+                            ]
+                          },
+                          {
+                            "id": "recordPath",
+                            "observation": {
+                              "text": "Inventory records the checkout.",
+                              "reviewed": [
+                                {
+                                  "object": "record",
+                                  "sha256": "b2ae1dfced5aed87f30e89876d4c9905cca159b939c9293a89b5edb2418517e6"
+                                },
+                                {
+                                  "object": "recordAction",
+                                  "sha256": "7fce99c317a27fb88644bfe0510ef6b163e60ea3113d8c7aa1840e40d54206ff"
+                                },
+                                {
+                                  "object": "inventory",
+                                  "sha256": "e6dcbfea965a0addde2096d6dc1840ba2e11514ef250513346cbb4bc44cd89ad"
+                                },
+                                {
+                                  "object": "inventoryLink",
+                                  "sha256": "cc62d8e8bfb6850a70c0ebaf621895f827991b27b51d49b9278af6caa2094872"
+                                },
+                                {
+                                  "object": "pendingState",
+                                  "sha256": "b0073c55b3fda5f37d18829b26cbe067f2fabee4670d7588badaedb01f6ed5bc"
+                                },
+                                {
+                                  "object": "checkedOutState",
+                                  "sha256": "25c07774d5d8b1769081a41fa81a2762cd84c1d7401276c2cd35ab7942e1e434"
+                                }
+                              ]
+                            },
+                            "sources": [
+                              "record"
+                            ],
+                            "steps": [
+                              "3"
+                            ],
+                            "blocks": [
+                              "P1"
+                            ],
+                            "businessRules": [],
+                            "transitions": [],
+                            "processExceptions": [],
+                            "coverage": [
+                              "path"
+                            ]
+                          },
+                          {
+                            "id": "submitToReview",
+                            "observation": {
+                              "text": "The submitted request goes to staff review.",
+                              "reviewed": [
+                                {
+                                  "object": "request",
+                                  "sha256": "d5d14e54e711ab3bbb3760a060c8fd1c73e85a52fecd8a24210bbd13289c2579"
+                                },
+                                {
+                                  "object": "review",
+                                  "sha256": "e4f46eefac8ca90654eff8534af0bd2c147315bb47430154b0412068fd7e8dac"
+                                },
+                                {
+                                  "object": "borrower",
+                                  "sha256": "ef7a1fc4de2beb3aa4389daf9341aa0aef15415bfa4b4c47f89edc2d476a41e5"
+                                },
+                                {
+                                  "object": "requestPage",
+                                  "sha256": "bd99e2344cdd5d544663eeacadb2cf4c4752b1e9bab9a892b8806b2424ccb5ad"
+                                },
+                                {
+                                  "object": "staff",
+                                  "sha256": "4deffc512868bdec20c0868b0311f4ac11d26301c990ac691623e4fa6bd28823"
+                                }
+                              ]
+                            },
+                            "sources": [
+                              "request",
+                              "review"
+                            ],
+                            "steps": [
+                              "1",
+                              "2"
+                            ],
+                            "blocks": [
+                              "S1",
+                              "S2"
+                            ],
+                            "businessRules": [],
+                            "transitions": [],
+                            "processExceptions": [],
+                            "coverage": [
+                              "path"
+                            ]
+                          },
+                          {
+                            "id": "approvalToRecord",
+                            "observation": {
+                              "text": "Approved requests proceed to inventory checkout.",
+                              "reviewed": [
+                                {
+                                  "object": "review",
+                                  "sha256": "e4f46eefac8ca90654eff8534af0bd2c147315bb47430154b0412068fd7e8dac"
+                                },
+                                {
+                                  "object": "record",
+                                  "sha256": "b2ae1dfced5aed87f30e89876d4c9905cca159b939c9293a89b5edb2418517e6"
+                                },
+                                {
+                                  "object": "staff",
+                                  "sha256": "4deffc512868bdec20c0868b0311f4ac11d26301c990ac691623e4fa6bd28823"
+                                },
+                                {
+                                  "object": "recordAction",
+                                  "sha256": "7fce99c317a27fb88644bfe0510ef6b163e60ea3113d8c7aa1840e40d54206ff"
+                                },
+                                {
+                                  "object": "inventory",
+                                  "sha256": "e6dcbfea965a0addde2096d6dc1840ba2e11514ef250513346cbb4bc44cd89ad"
+                                },
+                                {
+                                  "object": "inventoryLink",
+                                  "sha256": "cc62d8e8bfb6850a70c0ebaf621895f827991b27b51d49b9278af6caa2094872"
+                                },
+                                {
+                                  "object": "pendingState",
+                                  "sha256": "b0073c55b3fda5f37d18829b26cbe067f2fabee4670d7588badaedb01f6ed5bc"
+                                },
+                                {
+                                  "object": "checkedOutState",
+                                  "sha256": "25c07774d5d8b1769081a41fa81a2762cd84c1d7401276c2cd35ab7942e1e434"
+                                }
+                              ]
+                            },
+                            "sources": [
+                              "review",
+                              "record"
+                            ],
+                            "steps": [
+                              "2",
+                              "3"
+                            ],
+                            "blocks": [
+                              "S2",
+                              "P1"
+                            ],
+                            "businessRules": [],
+                            "transitions": [],
+                            "processExceptions": [],
+                            "coverage": [
+                              "path"
+                            ]
+                          },
+                          {
+                            "id": "returnToRequest",
+                            "observation": {
+                              "text": "Staff return requests for clarification.",
+                              "reviewed": [
+                                {
+                                  "object": "review",
+                                  "sha256": "e4f46eefac8ca90654eff8534af0bd2c147315bb47430154b0412068fd7e8dac"
+                                },
+                                {
+                                  "object": "request",
+                                  "sha256": "d5d14e54e711ab3bbb3760a060c8fd1c73e85a52fecd8a24210bbd13289c2579"
+                                },
+                                {
+                                  "object": "staff",
+                                  "sha256": "4deffc512868bdec20c0868b0311f4ac11d26301c990ac691623e4fa6bd28823"
+                                },
+                                {
+                                  "object": "borrower",
+                                  "sha256": "ef7a1fc4de2beb3aa4389daf9341aa0aef15415bfa4b4c47f89edc2d476a41e5"
+                                },
+                                {
+                                  "object": "requestPage",
+                                  "sha256": "bd99e2344cdd5d544663eeacadb2cf4c4752b1e9bab9a892b8806b2424ccb5ad"
+                                }
+                              ]
+                            },
+                            "sources": [
+                              "review",
+                              "request"
+                            ],
+                            "steps": [
+                              "2",
+                              "1"
+                            ],
+                            "blocks": [
+                              "S2",
+                              "S1"
+                            ],
+                            "businessRules": [],
+                            "transitions": [],
+                            "processExceptions": [],
+                            "coverage": [
+                              "path"
+                            ]
+                          },
+                          {
+                            "id": "failureToReview",
+                            "observation": {
+                              "text": "Inventory unavailability returns the pending request for review.",
+                              "reviewed": [
+                                {
+                                  "object": "recordAction",
+                                  "sha256": "7fce99c317a27fb88644bfe0510ef6b163e60ea3113d8c7aa1840e40d54206ff"
+                                },
+                                {
+                                  "object": "review",
+                                  "sha256": "e4f46eefac8ca90654eff8534af0bd2c147315bb47430154b0412068fd7e8dac"
+                                },
+                                {
+                                  "object": "inventory",
+                                  "sha256": "e6dcbfea965a0addde2096d6dc1840ba2e11514ef250513346cbb4bc44cd89ad"
+                                },
+                                {
+                                  "object": "inventoryLink",
+                                  "sha256": "cc62d8e8bfb6850a70c0ebaf621895f827991b27b51d49b9278af6caa2094872"
+                                },
+                                {
+                                  "object": "pendingState",
+                                  "sha256": "b0073c55b3fda5f37d18829b26cbe067f2fabee4670d7588badaedb01f6ed5bc"
+                                },
+                                {
+                                  "object": "checkedOutState",
+                                  "sha256": "25c07774d5d8b1769081a41fa81a2762cd84c1d7401276c2cd35ab7942e1e434"
+                                },
+                                {
+                                  "object": "staff",
+                                  "sha256": "4deffc512868bdec20c0868b0311f4ac11d26301c990ac691623e4fa6bd28823"
+                                }
+                              ]
+                            },
+                            "sources": [
+                              "record",
+                              "recordAction",
+                              "review"
+                            ],
+                            "steps": [
+                              "3",
+                              "2"
+                            ],
+                            "blocks": [
+                              "P1",
+                              "S2"
+                            ],
+                            "businessRules": [],
+                            "transitions": [],
+                            "processExceptions": [],
+                            "coverage": [
+                              "path"
+                            ]
+                          },
+                          {
+                            "id": "equipmentRequired",
+                            "observation": {
+                              "text": "Equipment is required on the request form.",
+                              "reviewed": [
+                                {
+                                  "object": "itemInput",
+                                  "sha256": "8dc3c476ef2bb8dc98205c09baeba4f42847836461db568a580f674332a0e5ab"
+                                },
+                                {
+                                  "object": "item",
+                                  "sha256": "102c3e142425c2cc7d625a36c1be02a967e432762b5b179aef41e2ea0be9eaae"
+                                }
+                              ]
+                            },
+                            "sources": [
+                              "itemInput"
+                            ],
+                            "steps": [
+                              "1"
+                            ],
+                            "blocks": [
+                              "S1"
+                            ],
+                            "businessRules": [],
+                            "transitions": [],
+                            "processExceptions": [],
+                            "coverage": [
+                              "field"
+                            ]
+                          },
+                          {
+                            "id": "processTrigger",
+                            "observation": {
+                              "question": "processQuestion"
+                            },
+                            "sources": [
+                              "record"
+                            ],
+                            "steps": [
+                              "3"
+                            ],
+                            "blocks": [
+                              "P1"
+                            ],
+                            "businessRules": [],
+                            "transitions": [],
+                            "processExceptions": [],
+                            "coverage": [
+                              "process-trigger"
+                            ]
+                          },
+                          {
+                            "id": "processOutput",
+                            "observation": {
+                              "text": "Inventory marks the equipment checked out.",
+                              "reviewed": [
+                                {
+                                  "object": "recordAction",
+                                  "sha256": "7fce99c317a27fb88644bfe0510ef6b163e60ea3113d8c7aa1840e40d54206ff"
+                                },
+                                {
+                                  "object": "inventory",
+                                  "sha256": "e6dcbfea965a0addde2096d6dc1840ba2e11514ef250513346cbb4bc44cd89ad"
+                                },
+                                {
+                                  "object": "inventoryLink",
+                                  "sha256": "cc62d8e8bfb6850a70c0ebaf621895f827991b27b51d49b9278af6caa2094872"
+                                },
+                                {
+                                  "object": "pendingState",
+                                  "sha256": "b0073c55b3fda5f37d18829b26cbe067f2fabee4670d7588badaedb01f6ed5bc"
+                                },
+                                {
+                                  "object": "checkedOutState",
+                                  "sha256": "25c07774d5d8b1769081a41fa81a2762cd84c1d7401276c2cd35ab7942e1e434"
+                                }
+                              ]
+                            },
+                            "sources": [
+                              "recordAction"
+                            ],
+                            "steps": [
+                              "3"
+                            ],
+                            "blocks": [
+                              "P1"
+                            ],
+                            "businessRules": [],
+                            "transitions": [],
+                            "processExceptions": [],
+                            "coverage": [
+                              "process-output"
+                            ]
+                          },
+                          {
+                            "id": "dateExample",
+                            "observation": {
+                              "text": "Temporary equipment with return date 2027-03-15 satisfies the required-date condition.",
+                              "reviewed": [
+                                {
+                                  "object": "dateRule",
+                                  "sha256": "22092276111fabc253e880cb8bb1185242881d51dd8653e06d2805674563e50a"
+                                },
+                                {
+                                  "object": "requestPage",
+                                  "sha256": "bd99e2344cdd5d544663eeacadb2cf4c4752b1e9bab9a892b8806b2424ccb5ad"
+                                },
+                                {
+                                  "object": "item",
+                                  "sha256": "102c3e142425c2cc7d625a36c1be02a967e432762b5b179aef41e2ea0be9eaae"
+                                },
+                                {
+                                  "object": "date",
+                                  "sha256": "2a77aa37bd5efef13ea2faa6ec488a082ef794cb6e9d4e90ff1d71e7b19df474"
+                                }
+                              ]
+                            },
+                            "sources": [
+                              "dateRule"
+                            ],
+                            "steps": [
+                              "1"
+                            ],
+                            "blocks": [
+                              "S1"
+                            ],
+                            "businessRules": [
+                              "BR-1"
+                            ],
+                            "transitions": [],
+                            "processExceptions": [],
+                            "coverage": [
+                              "rule-example"
+                            ]
+                          },
+                          {
+                            "id": "auditCoverage",
+                            "observation": {
+                              "question": "auditQuestion"
+                            },
+                            "sources": [
+                              "loans"
+                            ],
+                            "steps": [],
+                            "blocks": [],
+                            "businessRules": [],
+                            "transitions": [],
+                            "processExceptions": [],
+                            "coverage": [
+                              "audit"
+                            ]
+                          },
+                          {
+                            "id": "accessCoverage",
+                            "observation": {
+                              "question": "accessQuestion"
+                            },
+                            "sources": [
+                              "loans"
+                            ],
+                            "steps": [],
+                            "blocks": [],
+                            "businessRules": [],
+                            "transitions": [],
+                            "processExceptions": [],
+                            "coverage": [
+                              "access"
+                            ]
+                          },
+                          {
+                            "id": "integrityCoverage",
+                            "observation": {
+                              "question": "integrityQuestion"
+                            },
+                            "sources": [
+                              "loans"
+                            ],
+                            "steps": [],
+                            "blocks": [],
+                            "businessRules": [],
+                            "transitions": [],
+                            "processExceptions": [],
+                            "coverage": [
+                              "integrity"
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "standard": {
+        "version": 1,
+        "title": {
+          "text": "Equipment loan PRD",
+          "reviewed": [
+            {
+              "object": "source",
+              "sha256": "02a1f5368b0bbe39827d373833f43500da9b96024873451647c3e542f436e673"
+            }
+          ]
+        },
+        "authors": [
+          {
+            "question": "documentQuestion"
+          }
+        ],
+        "reviewers": [
+          {
+            "question": "documentQuestion"
+          }
+        ],
+        "startDate": {
+          "question": "documentQuestion"
+        },
+        "documentVersion": {
+          "question": "documentQuestion"
+        },
+        "background": {
+          "text": "Facilities coordinates equipment loans.",
+          "reviewed": [
+            {
+              "object": "loans",
+              "sha256": "51a59355d0cb226305459e178ff8dbc5ce92cb52e76ea53b1e2d283d3a6dd3e6"
+            }
+          ]
+        },
+        "objectives": [
+          {
+            "goal": {
+              "text": "Make loan requests visible.",
+              "reviewed": [
+                {
+                  "object": "request",
+                  "sha256": "d5d14e54e711ab3bbb3760a060c8fd1c73e85a52fecd8a24210bbd13289c2579"
+                },
+                {
+                  "object": "borrower",
+                  "sha256": "ef7a1fc4de2beb3aa4389daf9341aa0aef15415bfa4b4c47f89edc2d476a41e5"
+                },
+                {
+                  "object": "requestPage",
+                  "sha256": "bd99e2344cdd5d544663eeacadb2cf4c4752b1e9bab9a892b8806b2424ccb5ad"
+                }
+              ]
+            },
+            "meaning": {
+              "text": "Borrowers can request equipment.",
+              "reviewed": [
+                {
+                  "object": "request",
+                  "sha256": "d5d14e54e711ab3bbb3760a060c8fd1c73e85a52fecd8a24210bbd13289c2579"
+                },
+                {
+                  "object": "borrower",
+                  "sha256": "ef7a1fc4de2beb3aa4389daf9341aa0aef15415bfa4b4c47f89edc2d476a41e5"
+                },
+                {
+                  "object": "requestPage",
+                  "sha256": "bd99e2344cdd5d544663eeacadb2cf4c4752b1e9bab9a892b8806b2424ccb5ad"
+                }
+              ]
+            }
+          },
+          {
+            "goal": {
+              "text": "Support review.",
+              "reviewed": [
+                {
+                  "object": "review",
+                  "sha256": "e4f46eefac8ca90654eff8534af0bd2c147315bb47430154b0412068fd7e8dac"
+                },
+                {
+                  "object": "staff",
+                  "sha256": "4deffc512868bdec20c0868b0311f4ac11d26301c990ac691623e4fa6bd28823"
+                }
+              ]
+            },
+            "meaning": {
+              "text": "Staff review loan requests.",
+              "reviewed": [
+                {
+                  "object": "review",
+                  "sha256": "e4f46eefac8ca90654eff8534af0bd2c147315bb47430154b0412068fd7e8dac"
+                },
+                {
+                  "object": "staff",
+                  "sha256": "4deffc512868bdec20c0868b0311f4ac11d26301c990ac691623e4fa6bd28823"
+                }
+              ]
+            }
+          },
+          {
+            "goal": {
+              "text": "Record equipment checkout.",
+              "reviewed": [
+                {
+                  "object": "record",
+                  "sha256": "b2ae1dfced5aed87f30e89876d4c9905cca159b939c9293a89b5edb2418517e6"
+                },
+                {
+                  "object": "recordAction",
+                  "sha256": "7fce99c317a27fb88644bfe0510ef6b163e60ea3113d8c7aa1840e40d54206ff"
+                },
+                {
+                  "object": "inventory",
+                  "sha256": "e6dcbfea965a0addde2096d6dc1840ba2e11514ef250513346cbb4bc44cd89ad"
+                },
+                {
+                  "object": "inventoryLink",
+                  "sha256": "cc62d8e8bfb6850a70c0ebaf621895f827991b27b51d49b9278af6caa2094872"
+                },
+                {
+                  "object": "pendingState",
+                  "sha256": "b0073c55b3fda5f37d18829b26cbe067f2fabee4670d7588badaedb01f6ed5bc"
+                },
+                {
+                  "object": "checkedOutState",
+                  "sha256": "25c07774d5d8b1769081a41fa81a2762cd84c1d7401276c2cd35ab7942e1e434"
+                }
+              ]
+            },
+            "meaning": {
+              "text": "Inventory records approved checkout.",
+              "reviewed": [
+                {
+                  "object": "record",
+                  "sha256": "b2ae1dfced5aed87f30e89876d4c9905cca159b939c9293a89b5edb2418517e6"
+                },
+                {
+                  "object": "recordAction",
+                  "sha256": "7fce99c317a27fb88644bfe0510ef6b163e60ea3113d8c7aa1840e40d54206ff"
+                },
+                {
+                  "object": "inventory",
+                  "sha256": "e6dcbfea965a0addde2096d6dc1840ba2e11514ef250513346cbb4bc44cd89ad"
+                },
+                {
+                  "object": "inventoryLink",
+                  "sha256": "cc62d8e8bfb6850a70c0ebaf621895f827991b27b51d49b9278af6caa2094872"
+                },
+                {
+                  "object": "pendingState",
+                  "sha256": "b0073c55b3fda5f37d18829b26cbe067f2fabee4670d7588badaedb01f6ed5bc"
+                },
+                {
+                  "object": "checkedOutState",
+                  "sha256": "25c07774d5d8b1769081a41fa81a2762cd84c1d7401276c2cd35ab7942e1e434"
+                }
+              ]
+            }
+          }
+        ],
+        "glossary": [
+          {
+            "term": {
+              "text": "Equipment loan",
+              "reviewed": [
+                {
+                  "object": "loans",
+                  "sha256": "51a59355d0cb226305459e178ff8dbc5ce92cb52e76ea53b1e2d283d3a6dd3e6"
+                }
+              ]
+            },
+            "definition": {
+              "text": "A request to borrow shared equipment.",
+              "reviewed": [
+                {
+                  "object": "loans",
+                  "sha256": "51a59355d0cb226305459e178ff8dbc5ce92cb52e76ea53b1e2d283d3a6dd3e6"
+                }
+              ]
+            }
+          }
+        ],
+        "roles": [
+          {
+            "role": "borrower",
+            "purpose": {
+              "text": "Request equipment",
+              "reviewed": [
+                {
+                  "object": "borrower",
+                  "sha256": "ef7a1fc4de2beb3aa4389daf9341aa0aef15415bfa4b4c47f89edc2d476a41e5"
+                }
+              ]
+            },
+            "permissions": {
+              "question": "scopeQuestion"
+            },
+            "restrictions": {
+              "question": "scopeQuestion"
+            }
+          },
+          {
+            "role": "staff",
+            "purpose": {
+              "text": "Review requests",
+              "reviewed": [
+                {
+                  "object": "staff",
+                  "sha256": "4deffc512868bdec20c0868b0311f4ac11d26301c990ac691623e4fa6bd28823"
+                }
+              ]
+            },
+            "permissions": {
+              "question": "scopeQuestion"
+            },
+            "restrictions": {
+              "question": "scopeQuestion"
+            }
+          },
+          {
+            "role": "inventory",
+            "purpose": {
+              "text": "Update inventory",
+              "reviewed": [
+                {
+                  "object": "inventory",
+                  "sha256": "e6dcbfea965a0addde2096d6dc1840ba2e11514ef250513346cbb4bc44cd89ad"
+                }
+              ]
+            },
+            "permissions": {
+              "question": "scopeQuestion"
+            },
+            "restrictions": {
+              "question": "scopeQuestion"
+            }
+          }
+        ],
+        "sharedRules": [],
+        "history": [
+          {
+            "version": "0.1",
+            "date": {
+              "question": "documentQuestion"
+            },
+            "change": {
+              "text": "Initial research draft.",
+              "reviewed": [
+                {
+                  "object": "loans",
+                  "sha256": "51a59355d0cb226305459e178ff8dbc5ce92cb52e76ea53b1e2d283d3a6dd3e6"
+                }
+              ]
+            },
+            "author": {
+              "question": "documentQuestion"
+            },
+            "released": false,
+            "references": [],
+            "chapters": []
+          },
+          {
+            "version": "1.0",
+            "date": {
+              "question": "documentQuestion"
+            },
+            "change": {
+              "text": "Initial loan baseline.",
+              "reviewed": [
+                {
+                  "object": "loans",
+                  "sha256": "51a59355d0cb226305459e178ff8dbc5ce92cb52e76ea53b1e2d283d3a6dd3e6"
+                }
+              ]
+            },
+            "author": {
+              "question": "documentQuestion"
+            },
+            "released": true,
+            "references": [
+              {
+                "text": "Synthetic research note v1.",
+                "reviewed": [
+                  {
+                    "object": "source",
+                    "sha256": "02a1f5368b0bbe39827d373833f43500da9b96024873451647c3e542f436e673"
+                  }
+                ]
+              }
+            ],
+            "chapters": []
+          },
+          {
+            "version": "1.1",
+            "date": {
+              "question": "documentQuestion"
+            },
+            "change": {
+              "text": "Clarify inventory failure.",
+              "reviewed": [
+                {
+                  "object": "recordAction",
+                  "sha256": "7fce99c317a27fb88644bfe0510ef6b163e60ea3113d8c7aa1840e40d54206ff"
+                },
+                {
+                  "object": "inventory",
+                  "sha256": "e6dcbfea965a0addde2096d6dc1840ba2e11514ef250513346cbb4bc44cd89ad"
+                },
+                {
+                  "object": "inventoryLink",
+                  "sha256": "cc62d8e8bfb6850a70c0ebaf621895f827991b27b51d49b9278af6caa2094872"
+                },
+                {
+                  "object": "pendingState",
+                  "sha256": "b0073c55b3fda5f37d18829b26cbe067f2fabee4670d7588badaedb01f6ed5bc"
+                },
+                {
+                  "object": "checkedOutState",
+                  "sha256": "25c07774d5d8b1769081a41fa81a2762cd84c1d7401276c2cd35ab7942e1e434"
+                }
+              ]
+            },
+            "author": {
+              "question": "documentQuestion"
+            },
+            "released": true,
+            "references": [
+              {
+                "text": "Synthetic research note v1.",
+                "reviewed": [
+                  {
+                    "object": "source",
+                    "sha256": "02a1f5368b0bbe39827d373833f43500da9b96024873451647c3e542f436e673"
+                  }
+                ]
+              }
+            ],
+            "chapters": [
+              {
+                "feature": "checkoutFeature",
+                "summary": {
+                  "text": "Clarify inventory failure.",
+                  "reviewed": [
+                    {
+                      "object": "recordAction",
+                      "sha256": "7fce99c317a27fb88644bfe0510ef6b163e60ea3113d8c7aa1840e40d54206ff"
+                    },
+                    {
+                      "object": "inventory",
+                      "sha256": "e6dcbfea965a0addde2096d6dc1840ba2e11514ef250513346cbb4bc44cd89ad"
+                    },
+                    {
+                      "object": "inventoryLink",
+                      "sha256": "cc62d8e8bfb6850a70c0ebaf621895f827991b27b51d49b9278af6caa2094872"
+                    },
+                    {
+                      "object": "pendingState",
+                      "sha256": "b0073c55b3fda5f37d18829b26cbe067f2fabee4670d7588badaedb01f6ed5bc"
+                    },
+                    {
+                      "object": "checkedOutState",
+                      "sha256": "25c07774d5d8b1769081a41fa81a2762cd84c1d7401276c2cd35ab7942e1e434"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "assets": [],
+  "nativeViews": [
+    {
+      "id": "checkoutFlow",
+      "diagramType": "workflow",
+      "service": "loans",
+      "source": "source",
+      "anchor": {
+        "locator": "note",
+        "quote": "A borrower requests equipment, staff review it, and inventory records the checkout."
+      },
+      "spec": {
+        "schema_version": 2,
+        "diagram_type": "workflow",
+        "meta": {
+          "title": "checkoutFlow",
+          "output": "checkoutFlow.html"
+        },
+        "lanes": [
+          {
+            "id": "borrowerLane",
+            "label": "Borrower"
+          },
+          {
+            "id": "staffLane",
+            "label": "Staff"
+          },
+          {
+            "id": "systemLane",
+            "label": "Inventory system"
+          }
+        ],
+        "nodes": [
+          {
+            "id": "requestNode",
+            "lane": "borrowerLane",
+            "col": 0,
+            "type": "frontend",
+            "label": "Submit request"
+          },
+          {
+            "id": "reviewNode",
+            "lane": "staffLane",
+            "col": 1,
+            "type": "frontend",
+            "label": "Review request"
+          },
+          {
+            "id": "recordNode",
+            "lane": "systemLane",
+            "col": 2,
+            "type": "backend",
+            "label": "Record checkout"
+          }
+        ],
+        "edges": [
+          {
+            "id": "submitEdge",
+            "from": "requestNode",
+            "to": "reviewNode",
+            "label": "Request submitted"
+          },
+          {
+            "id": "approvedEdge",
+            "from": "reviewNode",
+            "to": "recordNode",
+            "label": "Approved"
+          },
+          {
+            "id": "clarifyEdge",
+            "from": "reviewNode",
+            "to": "requestNode",
+            "label": "Clarify",
+            "role": "return"
+          },
+          {
+            "id": "unavailableEdge",
+            "from": "recordNode",
+            "to": "reviewNode",
+            "label": "Inventory unavailable",
+            "role": "error"
+          }
+        ]
+      },
+      "laneBindings": [
+        {
+          "lane": "borrowerLane",
+          "role": "borrower"
+        },
+        {
+          "lane": "staffLane",
+          "role": "staff"
+        },
+        {
+          "lane": "systemLane",
+          "role": "inventory"
+        }
+      ],
+      "bindings": [
+        {
+          "node": "requestNode",
+          "object": "request",
+          "type": "activity"
+        },
+        {
+          "node": "reviewNode",
+          "object": "review",
+          "type": "activity"
+        },
+        {
+          "node": "recordNode",
+          "object": "record",
+          "type": "activity"
+        }
+      ]
+    }
+  ]
+}

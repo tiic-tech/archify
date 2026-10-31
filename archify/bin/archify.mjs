@@ -2190,6 +2190,7 @@ function invalidProvenance(artifactPath, sidecar, reason, evidence = {}) {
 }
 
 const COMMAND_USAGE = {
+  prd: ['validate <model.json> --json', 'compile <model.json> -o <new-manifest.json> [--expect-revision <hash>] [--base-manifest <manifest.json>] [--ready <scope>] --json', 'build <model.json> -o <new-reader.html> [--audience internal|client] [--disclosure <policy.json>] --json', 'export <model.json> -o <new-directory> --audience internal|client [--disclosure <policy.json>] [--markdown-only | --pdf] [--expect-revision <hash>] [--base-manifest <manifest.json>] [--ready <scope>] --json', 'export <model.json> -o <new-directory> --audience internal|client [--disclosure <policy.json>] --service <id> --service-history <file> --markdown-only [--incremental-from <directory>] --json', 'feedback validate <package.json> --json', 'feedback map-public <package.json> --model <model.json> --disclosure <policy.json> --expect-revision <hash> --expect-snapshot <hash> -o <new-package.json> --json', 'feedback import <package.json> --model <model.json> [--store <store.json> --expect-store <hash>] -o <new-store.json> --json', 'feedback export <store.json> -o <new-package.json> --json', 'feedback inspect <store.json> --model <model.json> --json', 'feedback propose <request.json> --model <model.json> --store <store.json> --expect-store <hash> -o <new-proposal.json> --json', 'feedback apply <proposal.json> --model <model.json> --store <store.json> --expect-store <hash> -o <new-model.json> --json', 'feedback questions <model.json> -o <new-questions.json> --json'],
   story: ['scan <native.html> [--json]', 'draft <native.html> <brief.json> [--json]', 'attach <native.html> <brief.json> <enhanced.html> [--json] [--repo-root path]'],
   render: '<type> <input.json> [output.html] [--quality standard|showcase] [--repo-root path]',
   compare: 'architecture <base.json> <head.json> [output.html] [--receipt path] [--json] [--quality standard|showcase] [--repo-root path]',
@@ -2216,6 +2217,7 @@ function usage() {
   return `Usage:
 ${commands.join('\n')}
   (finalize --out-dir relocates browser-check and default finalize receipts; HTML and its delivery receipt stay at the requested output path)
+  (Service export JSON: revision is the Service identity; workspaceRevision is the prepared workspace lineage, and historyIdentity, baseReceipt, cache and timingMs are execution receipt fields.)
 
 Types:
   architecture, workflow, sequence, dataflow, lifecycle, erd, tree, class, timeline, waterfall, explainer
@@ -7275,6 +7277,9 @@ try {
       break;
     case 'story':
       (await import('../story/cli.mjs')).commandStory(args);
+      break;
+    case 'prd':
+      await (await import('../explainer/workspace/prd-cli.mjs')).commandPrd(args);
       break;
     case 'compare':
       await commandCompare(args);

@@ -67,11 +67,25 @@ jobs:
         env:
           ARCHIFY_CHROME: ${{ steps.setup-chrome.outputs.chrome-path }}
           ARCHIFY_CHROME_NO_SANDBOX: '1'
+      - name: Provision Chrome's setuid sandbox helper
+        id: chrome-sandbox
+        shell: bash
+        env:
+          CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+        run: |
+          set -euo pipefail
+          test "$(id -u)" -ne 0
+          helper="$(dirname "$CHROME_PATH")/chrome-sandbox"
+          if [[ ! -f "$helper" ]]; then helper="$(dirname "$CHROME_PATH")/chrome_sandbox"; fi
+          test -f "$helper" && test ! -L "$helper"
+          sudo chown root:root "$helper"
+          sudo chmod 4755 "$helper"
+          echo "path=$helper" >> "$GITHUB_OUTPUT"
       - name: Run shared browser regression gate
         run: npm run test:browser
         env:
           ARCHIFY_CHROME: ${{ steps.setup-chrome.outputs.chrome-path }}
-          ARCHIFY_CHROME_NO_SANDBOX: '1'
+          CHROME_DEVEL_SANDBOX: ${{ steps.chrome-sandbox.outputs.path }}
       - name: Tag must match package.json version
         run: |
           pkg_version="$(node -p "require('./archify/package.json').version")"

@@ -42,6 +42,12 @@ function repositoryFixture() {
   write(root, 'archify/scripts/check-update.mjs', 'export {};\n');
   write(root, 'archify/scripts/update-contract.mjs', 'export {};\n');
   write(root, 'archify/renderers/shared/generated-validators.mjs', 'export {};\n');
+  for (const name of ['generated-prd-validators.mjs','generated-prd-feedback-browser.js','prd-product-v2.mjs','prd-standard-v1.mjs','prd-standard-refinements.mjs','prd-standard-context.mjs','prd-standard-composer.mjs','prd-product-public-v2.mjs','prd-feature-composer.mjs','prd-feature-export.mjs','prd-reader-build.mjs','prd-reader.js','prd-feedback-schema.mjs','prd-proposal-schema.mjs']) {
+    write(root, `archify/explainer/workspace/${name}`, 'export {};\n');
+  }
+  write(root, 'archify/references/prd-workspace.md', '# PRD workspace\n');
+  write(root, 'archify/references/prd-authoring.md', '# PRD authoring\n');
+  write(root, 'archify/examples/prd-research-starter.json', '{}\n');
   write(root, 'archify/renderers/shared/path-semantics.mjs', 'export {};\n');
   write(root, 'archify/renderers/shared/portable-path.mjs', 'export {};\n');
   write(root, 'test/repository-only.test.mjs', 'throw new Error();\n');
@@ -104,6 +110,23 @@ test('clean staging rejects untracked required release inputs before creating ou
       'archify/scripts/check-update.mjs',
       'archify/scripts/update-contract.mjs',
       'archify/renderers/shared/generated-validators.mjs',
+      'archify/explainer/workspace/generated-prd-validators.mjs',
+      'archify/explainer/workspace/generated-prd-feedback-browser.js',
+      'archify/explainer/workspace/prd-product-v2.mjs',
+      'archify/explainer/workspace/prd-standard-v1.mjs',
+      'archify/explainer/workspace/prd-standard-refinements.mjs',
+      'archify/explainer/workspace/prd-standard-context.mjs',
+      'archify/explainer/workspace/prd-standard-composer.mjs',
+      'archify/explainer/workspace/prd-product-public-v2.mjs',
+      'archify/explainer/workspace/prd-feature-composer.mjs',
+      'archify/explainer/workspace/prd-feature-export.mjs',
+      'archify/explainer/workspace/prd-reader-build.mjs',
+      'archify/explainer/workspace/prd-reader.js',
+      'archify/explainer/workspace/prd-feedback-schema.mjs',
+      'archify/explainer/workspace/prd-proposal-schema.mjs',
+      'archify/references/prd-workspace.md',
+      'archify/references/prd-authoring.md',
+      'archify/examples/prd-research-starter.json',
     ]) {
       git(root, ['rm', '--cached', '-f', relative]);
       assert.throws(() => stageCleanSkill({ repoRoot: root, destination }), error => {

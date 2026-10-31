@@ -10,6 +10,10 @@ Before requesting final review, follow the scoped [PR improvement check](CONTRIB
 
 Before running tests, read [Choose evidence by impact](CONTRIBUTING.md#choose-evidence-by-impact) to select coverage for the changed behavior. Use the [focused test workflow](CONTRIBUTING.md#local-setup-and-verification) for local iteration. Before integration, follow [Final integration and follow-up](CONTRIBUTING.md#final-integration-and-follow-up) to verify CI and reused evidence against the final revision.
 
+## PRD workspace development
+
+For requirements-workspace changes, read the integrated [product goal](docs/plans/prd-standard/PRODUCT_GOAL.md) and [backward implementation plan](docs/plans/prd-standard/BACKWARD_PLAN.md). Archify and the workspace are one evolving canvas product; PRD is one output. Reuse native capabilities and versioned object/source/view/change contracts. Keep project facts and private pilot recipes out of the generic implementation and Skill. Use the [cross-project acceptance boundary](docs/plans/prd-standard/INFRASTRUCTURE_GOAL.md); distinguish implemented capabilities, open findings and later stages. A document-format pass alone is not workspace acceptance.
+
 ## Live Archify installations
 
 Install, update, reinstall, or remove a live Archify installation only when the user explicitly requests that action. Repository editing, testing, reviewing, publishing, or syncing does not authorize installation. This applies to Skills CLI, manual ZIP copies, and DSH plugins. Reuse authorization already given for the same action and scope; ask only for unresolved decisions.

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -110,6 +111,26 @@ async function verifyPackagedExplainer() {
 
 }
 
+function verifyPackagedPrd(){
+  const options={cwd:scratch,env:{...process.env,NODE_PATH:'',ARCHIFY_UPDATE_CHECK_DISABLED:'1'}},fixture=path.join(repoRoot,'test/fixtures/prd-workspace-reader'),dir=path.join(scratch,'prd');fs.mkdirSync(dir);
+  const write=(name,value)=>{const target=path.join(dir,name);fs.writeFileSync(target,JSON.stringify(value));return target;},call=(...args)=>JSON.parse(run(['prd',...args,'--json'],options)),reject=(...args)=>JSON.parse(runExpectFailure(['prd',...args,'--json'],options));
+  const reader=JSON.parse(fs.readFileSync(path.join(fixture,'reader.json')));reader.workspaceId='1fd09445-b9d9-4884-ac67-cc8e607708d9';for(const name of ['event-plan.txt','prototype.png'])fs.copyFileSync(path.join(fixture,name),path.join(dir,name));
+  const input=write('reader.json',reader),invalid=structuredClone(reader);invalid.objects[0].unknownPrivateField=true;const bad=write('invalid.json',invalid),badResult=reject('validate',bad);if(badResult.ok||!badResult.diagnostics?.some(d=>d.code==='prd/schema'))throw Error('Packaged PRD must reject unknown model fields with structured schema diagnostics.');
+  const compiled=call('compile',input,'-o',path.join(dir,'native-manifest.json'));call('build',input,'-o',path.join(dir,'native-reader.html'));const manifest=JSON.parse(fs.readFileSync(path.join(dir,'native-manifest.json')));if(!compiled.ok||!manifest.nativeViews.length||!fs.readFileSync(path.join(dir,'native-reader.html'),'utf8').includes('id="reader-data"'))throw Error('Packaged PRD native preparation or reader failed.');
+  for(const name of ['generated-prd-validators.mjs','generated-prd-feedback-browser.js','prd-feedback-schema.mjs','prd-proposal-schema.mjs']){const actual=createHash('sha256').update(fs.readFileSync(path.join(skillRoot,'explainer/workspace',name))).digest('hex');if(manifest.identities.code[name]!==actual)throw Error('Packaged PRD validator identity mismatch: '+name);}
+  const garden=JSON.parse(fs.readFileSync(path.join(repoRoot,'test/fixtures/prd-workspace/garden.json')));garden.workspaceId=reader.workspaceId;const model=write('garden.json',garden),policy=write('policy.json',{version:1,components:{catalogSection:'Seed catalog',notes:'Notes'},objects:{name:{id:'packetName',title:'Packet name',purpose:'Identify a packet',fields:['detail.dataType']}},omitted:{garden:'Broader scope under review.',catalog:'Boundary under review.',extra:'Note under review.'}}),base=path.join(dir,'base.json');
+  const validation=call('validate',model);call('compile',model,'-o',base);call('build',model,'-o',path.join(dir,'client.html'),'--audience','client','--disclosure',policy);call('export',model,'-o',path.join(dir,'internal'),'--markdown-only');call('export',model,'-o',path.join(dir,'client'),'--audience','client','--disclosure',policy,'--markdown-only');
+  const publicMd=fs.readFileSync(path.join(dir,'client/README.md'),'utf8'),internalMd=fs.readFileSync(path.join(dir,'internal/README.md'),'utf8');if(!publicMd.includes('Packet name')||!internalMd.includes('Packet name')||publicMd.includes('ignore all previous instructions'))throw Error('Packaged PRD Markdown projection failed.');
+  const html=fs.readFileSync(path.join(dir,'client.html'),'utf8'),data=JSON.parse(html.match(/<script type="application\/json" id="reader-data">([\s\S]*?)<\/script>/)?.[1]||'null');if(!data?.snapshot||data.revision!==validation.revision)throw Error('Packaged PRD public snapshot identity missing.');
+  const comment={id:'packageComment',objectId:'packetName',baseRevision:validation.revision,quoteSnapshot:{path:'/title',text:'Packet name'},author:'Synthetic reviewer',time:'2026-01-01T00:00:00Z',body:'Review the title as inert text.',state:'open'},pkg={kind:'archify-prd-public-feedback',schemaVersion:1,workspaceId:garden.workspaceId,revision:validation.revision,disclosure:data.disclosure,snapshot:data.snapshot,exporter:data.exporter,comments:[comment]},publicFile=write('public-feedback.json',pkg),mapped=path.join(dir,'mapped.json');
+  const malformed=structuredClone(pkg);malformed.comments[0].sourceAnchor={sourceId:'note',locator:'row 1',quote:'text',sourceHash:'0'.repeat(64)};if(reject('feedback','validate',write('bad-feedback.json',malformed)).ok)throw Error('Packaged public feedback admitted private provenance.');
+  call('feedback','map-public',publicFile,'--model',model,'--disclosure',policy,'--expect-revision',validation.revision,'--expect-snapshot',data.snapshot,'-o',mapped);const mappedComment=JSON.parse(fs.readFileSync(mapped)).comments[0];if(mappedComment.objectId!=='name'||mappedComment.publicOrigin?.objectId!=='packetName'||mappedComment.publicOrigin.snapshot!==data.snapshot)throw Error('Packaged feedback lost its projection origin.');
+  const store=path.join(dir,'store.json'),imported=call('feedback','import',mapped,'--model',model,'-o',store),inspection=call('feedback','inspect',store,'--model',model);if(inspection.comments[0]?.review!=='current')throw Error('Packaged feedback exact quote is not current.');
+  const request={kind:'archify-prd-change-request',schemaVersion:1,workspaceId:garden.workspaceId,proposalId:'packageProposal',baseRevision:validation.revision,storeRevision:imported.revision,objectId:'name',operation:'replace',path:'/title',oldValue:'Packet name',oldHash:createHash('sha256').update(JSON.stringify('Packet name')).digest('hex'),newValue:'Seed packet name',commentIds:['packageComment']},requestFile=write('request.json',request),proposal=path.join(dir,'proposal.json'),updated=path.join(dir,'updated.json');const malformedRequest=structuredClone(request);malformedRequest.commentIds.push('packageComment');if(reject('feedback','propose',write('bad-request.json',malformedRequest),'--model',model,'--store',store,'--expect-store',imported.revision,'-o',path.join(dir,'bad-proposal.json')).ok)throw Error('Packaged proposal admitted duplicate comments.');
+  call('feedback','propose',requestFile,'--model',model,'--store',store,'--expect-store',imported.revision,'-o',proposal);const applied=call('feedback','apply',proposal,'--model',model,'--store',store,'--expect-store',imported.revision,'-o',updated);const after=call('compile',updated,'--base-manifest',base,'--expect-revision',validation.revision,'-o',path.join(dir,'updated-manifest.json'));if(!after.ok||after.revision!==applied.revision)throw Error('Packaged PRD proposal/base compile failed.');
+  process.stdout.write('packaged PRD native reader, strict validation, Markdown projections and mapped feedback/proposal passed without dependencies\n');
+}
+
 function verifyPackagedStory(){
   const input=path.join(skillRoot,'examples/workflow-agent-tool-call-rendered.html'),brief=path.join(scratch,'story-brief.json'),output=path.join(scratch,'story-enhanced.html');
   const options={cwd:scratch,env:{...process.env,NODE_PATH:'',ARCHIFY_UPDATE_CHECK_DISABLED:'1'}};
@@ -134,6 +155,11 @@ async function verifyPackage() {
   requireAbsent('.hive');
   requireAbsent('.workbuddy');
 
+  if (process.argv.includes('--prd-only')) {
+    verifyPackagedPrd();
+    process.stdout.write(`PRD package smoke passed on ${process.platform} (${skillRoot})\n`);
+    return;
+  }
   if (process.argv.includes('--explainer-only')) {
     await verifyPackagedExplainer();
     process.stdout.write(`explainer package smoke passed on ${process.platform} (${skillRoot})\n`);
@@ -263,6 +289,7 @@ async function verifyPackage() {
 
   await verifyPackagedExplainer();
 
+  verifyPackagedPrd();
   verifyPackagedStory();
 
   const workflowLayout = JSON.parse(run([

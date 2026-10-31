@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "workspaceId": "74b89e42-c090-4ed7-ad80-92d73ffb2319",
+  "objects": [
+    {
+      "id": "project",
+      "type": "project",
+      "title": "Research workspace",
+      "purpose": "Retain an initial observation and question",
+      "status": "proposed",
+      "detail": { "scope": "An incomplete research scope" }
+    },
+    {
+      "id": "sourceV1",
+      "type": "source",
+      "title": "Initial note",
+      "purpose": "Preserve the original research record",
+      "status": "reference",
+      "detail": {},
+      "source": {
+        "recordKey": "initialNote",
+        "version": "1",
+        "locator": "note, paragraph 1",
+        "text": "A research note records an unresolved handoff.",
+        "sha256": "37498ea80cda0ccaf18bc708c418cf5012438b0f43f857660fdadc7550e022fe"
+      }
+    },
+    {
+      "id": "observation",
+      "type": "extension",
+      "title": "Unclassified observation",
+      "purpose": "Retain an interpretation before classification",
+      "status": "proposed",
+      "detail": {},
+      "content": "A handoff is mentioned, but its participants are not established.",
+      "refs": [
+        { "relation": "target", "target": "project", "type": "project" },
+        { "relation": "derivedFrom", "target": "sourceV1", "type": "source", "locator": "note, paragraph 1", "quote": "an unresolved handoff", "interpretation": "An unresolved handoff is recorded." }
+      ]
+    },
+    {
+      "id": "handoffQuestion",
+      "type": "question",
+      "title": "Who participates in the handoff?",
+      "purpose": "Resolve the missing participants",
+      "status": "proposed",
+      "detail": { "scope": ["observation"], "consequence": "The process cannot yet be established.", "options": [], "assumptions": [], "confirmingFunction": "Research owner", "blocking": true },
+      "refs": [
+        { "relation": "target", "target": "observation", "type": "extension" },
+        { "relation": "derivedFrom", "target": "sourceV1", "type": "source", "locator": "note, paragraph 1", "quote": "an unresolved handoff", "interpretation": "The record does not identify participants." }
+      ]
+    }
+  ],
+  "profile": {
+    "id": "researchProfile",
+    "version": "1",
+    "components": [
+      { "id": "research", "version": 1, "type": "evidence", "heading": "Research", "selector": { "types": ["project", "source", "extension", "question"] }, "requiredWhen": "always", "gapPolicy": "include", "clientProjection": "include", "outputs": ["document"] }
+    ]
+  },
+  "assets": [],
+  "nativeViews": []
+}

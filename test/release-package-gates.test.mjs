@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -187,23 +188,52 @@ test('CI binds a public notifier manifest to the Release asset, tagged archive, 
   assert.match(job, /validateStableUpdateManifest/);
   assert.match(job, /releases\/latest/);
   assert.match(job, /latest_stable_tag" != "v\$\{manifest_version\}"/);
-  assert.match(job, /releases\/tags\/v\$\{manifest_version\}/);
+  assert.match(job, /repos\/\$\{source_slug\}\/releases\/latest/);
+  assert.match(job, /repos\/\$\{source_slug\}\/releases\/tags\/\$\{manifest_tag\}/);
   assert.match(job, /select\(\.draft == false and \.prerelease == false\)/);
   assert.match(job, /select\(\.name == "archify\.zip"\)/);
-  assert.match(job, /releases\/assets\/\$\{release_asset_id\}/);
+  assert.match(job, /repos\/\$\{source_slug\}\/releases\/assets\/\$\{release_asset_id\}/);
   assert.match(job, /Accept: application\/octet-stream/);
-  assert.match(job, /refs\/tags\/v\$\{manifest_version\}:refs\/tags\/v\$\{manifest_version\}/);
-  assert.match(job, /git show "v\$\{manifest_version\}:archify\.zip" > "\$tagged_archive"/);
+  assert.match(job, /git fetch --no-tags --depth=1 "\$source_repository"/);
+  assert.match(job, /refs\/tags\/\$\{manifest_tag\}:\$\{source_ref\}/);
+  assert.doesNotMatch(job, /git fetch --force|GITHUB_REPOSITORY/);
+  assert.match(job, /git show "\$\{source_ref\}:archify\.zip" > "\$tagged_archive"/);
   assert.match(job, /cmp -s "\$published_archive" "\$tagged_archive"/);
   assert.match(job, /check-stable-update-manifest\.mjs/);
   assert.match(job, /--archive "\$published_archive"/);
-  assert.match(job, /--tag "v\$\{manifest_version\}"/);
-  assert.match(job, /--source-ref "v\$\{manifest_version\}"/);
-  assert.match(job, /git worktree add --detach "\$tag_checkout" "v\$\{manifest_version\}"/);
+  assert.match(job, /--tag "\$manifest_tag"/);
+  assert.match(job, /--source-ref "\$source_ref"/);
+  assert.match(job, /git worktree add --detach "\$tag_checkout" "\$source_ref"/);
   assert.match(job, /"\$tag_checkout\/scripts\/build-zip\.sh" "\$rebuilt_archive"/);
   assert.match(job, /cmp -s "\$rebuilt_archive" "\$tagged_archive"/);
   assert.match(job, /manifest_version" == "2\.15\.0"/);
   assert.match(job, /missing the deterministic archive builder/);
+});
+
+test('notifier gate uses validated upstream through every check and rejects an untrusted source before network', {skip:process.platform==='win32'?'Bash workflow replay runs on the Linux CI runner':false}, () => {
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'archify-notifier-fork-')), upstream=path.join(root,'upstream'), fork=path.join(root,'fork'), bin=path.join(root,'bin'), trace=path.join(root,'trace');
+  const git=(cwd,...args)=>{const r=spawnSync('git',args,{cwd,encoding:'utf8'});assert.equal(r.status,0,r.stderr);return r.stdout.trim();};
+  try {
+    fs.mkdirSync(path.join(upstream,'archify','scripts'),{recursive:true});fs.mkdirSync(path.join(upstream,'scripts'),{recursive:true});fs.mkdirSync(bin);
+    fs.copyFileSync(path.join(repoRoot,'archify/scripts/update-contract.mjs'),path.join(upstream,'archify/scripts/update-contract.mjs'));
+    fs.writeFileSync(path.join(upstream,'archify','package.json'),'{"version":"3.0.0"}\n');fs.writeFileSync(path.join(upstream,'archify.zip'),'stable archive fixture\n');
+    for(const name of ['stage-clean-skill.mjs','write-deterministic-zip.mjs'])fs.writeFileSync(path.join(upstream,'scripts',name),'// fixture\n');
+    fs.writeFileSync(path.join(upstream,'scripts','build-zip.sh'),'#!/bin/sh\ncp "$(dirname "$0")/../archify.zip" "$1"\n',{mode:0o755});
+    git(upstream,'init','-q');git(upstream,'config','user.name','Fixture');git(upstream,'config','user.email','fixture@example.invalid');git(upstream,'add','.');git(upstream,'commit','-qm','fixture');git(upstream,'tag','-a','v3.0.0','-m','stable');
+    const tree=git(upstream,'rev-parse','HEAD:archify'), seconds=git(upstream,'for-each-ref','--format=%(taggerdate:unix)','refs/tags/v3.0.0');
+    const manifest={schemaVersion:1,skillId:'archify',channel:'stable',version:'3.0.0',publishedAt:new Date(Number(seconds)*1000).toISOString().replace('.000Z','Z'),source:{repository:'https://github.com/tt-a1i/archify',ref:'v3.0.0',treeSha:tree},artifact:{sha256:createHash('sha256').update(fs.readFileSync(path.join(upstream,'archify.zip'))).digest('hex')},summary:'Stable fixture',releaseNotes:'https://github.com/tt-a1i/archify/releases/tag/v3.0.0',severity:'normal'};
+    git(root,'clone','-q','--no-tags',upstream,fork);git(fork,'tag','v3.0.0');const localTag=git(fork,'rev-parse','refs/tags/v3.0.0');
+    fs.mkdirSync(path.join(fork,'docs/skill-updates/archify'),{recursive:true});const manifestPath=path.join(fork,'docs/skill-updates/archify/stable.json');fs.writeFileSync(manifestPath,JSON.stringify(manifest));
+    fs.copyFileSync(path.join(repoRoot,'scripts/check-stable-update-manifest.mjs'),path.join(fork,'scripts/check-stable-update-manifest.mjs'));
+    const gitPath=spawnSync('which',['git'],{encoding:'utf8'}).stdout.trim();
+    fs.writeFileSync(path.join(bin,'git'),`#!/bin/bash\nprintf 'git %s\\n' "$*" >> "$TRACE"\nargs=("$@")\nfor i in "\${!args[@]}"; do [[ "\${args[$i]}" == 'https://github.com/tt-a1i/archify' ]] && args[$i]="$MOCK_UPSTREAM"; done\nexec ${JSON.stringify(gitPath)} "\${args[@]}"\n`,{mode:0o755});
+    fs.writeFileSync(path.join(bin,'gh'),`#!/bin/bash\nprintf 'gh %s\\n' "$*" >> "$TRACE"\ncase "$2" in\n  repos/tt-a1i/archify/releases/latest) echo v3.0.0;;\n  repos/tt-a1i/archify/releases/tags/v3.0.0) echo 42;;\n  repos/tt-a1i/archify/releases/assets/42) /bin/cat "$MOCK_ARCHIVE";;\n  *) exit 1;;\nesac\n`,{mode:0o755});
+    const workflow=parse(fs.readFileSync(path.join(repoRoot,'.github/workflows/ci.yml'),'utf8')),script=workflow.jobs['published-update-manifest'].steps.find(s=>s.name==='Public notifier manifest must reference an existing stable Release').run;
+    const env={...process.env,PATH:`${bin}${path.delimiter}${process.env.PATH}`,TRACE:trace,MOCK_UPSTREAM:upstream,MOCK_ARCHIVE:path.join(upstream,'archify.zip'),RUNNER_TEMP:root,GITHUB_REPOSITORY:'fictional/fork'};
+    const run=()=>spawnSync('bash',['-c',script],{cwd:fork,env,encoding:'utf8'});
+    const valid=run();assert.equal(valid.status,0,valid.stdout+valid.stderr);const calls=fs.readFileSync(trace,'utf8');assert.match(calls,/gh api repos\/tt-a1i\/archify\/releases\/latest/);assert.match(calls,/gh api repos\/tt-a1i\/archify\/releases\/tags\/v3\.0\.0/);assert.match(calls,/gh api repos\/tt-a1i\/archify\/releases\/assets\/42/);assert.match(calls,/git fetch --no-tags --depth=1 https:\/\/github\.com\/tt-a1i\/archify refs\/tags\/v3\.0\.0:refs\/archify\/stable\/v3\.0\.0/);assert.equal(git(fork,'rev-parse','refs/tags/v3.0.0'),localTag);
+    fs.writeFileSync(trace,'');manifest.source.repository='https://github.com/fictional/fork';fs.writeFileSync(manifestPath,JSON.stringify(manifest));const invalid=run();assert.notEqual(invalid.status,0);assert.equal(fs.readFileSync(trace,'utf8'),'','validation must precede API and fetch');
+  } finally {fs.rmSync(root,{recursive:true,force:true});}
 });
 
 test('release docs disclose that mutable Release assets are verified only at deployment time', () => {
@@ -285,6 +315,18 @@ test('GitHub Pages deploys the verified website artifact only after every reposi
   assert.match(windows, /node-version: \[22, 24\]/);
   assert.match(windows, /Verify maintained Windows path contracts/);
   assert.match(windows, /ARCHIFY_REQUIRE_WINDOWS_REAL_PATHS: '1'/);
+});
+
+test('CI and Release run the mandatory browser gate as non-root with Chrome sandbox enabled', () => {
+  for(const file of ['ci.yml','release.yml']){
+    const workflow=fs.readFileSync(path.join(repoRoot,'.github/workflows',file),'utf8');
+    const provision=workflowStep(workflow,"Provision Chrome's setuid sandbox helper"),gate=workflowStep(workflow,'Run shared browser regression gate');
+    assert.ok(workflow.indexOf(provision)<workflow.indexOf(gate),file);
+    assert.match(provision,/test "\$\(id -u\)" -ne 0/);assert.match(provision,/steps\.setup-chrome\.outputs\.chrome-path/);
+    assert.match(provision,/chrome-sandbox/);assert.match(provision,/chrome_sandbox/);assert.match(provision,/sudo chown root:root "\$helper"/);assert.match(provision,/sudo chmod 4755 "\$helper"/);
+    assert.match(gate,/npm run test:browser/);assert.match(gate,/ARCHIFY_CHROME: \$\{\{ steps\.setup-chrome\.outputs\.chrome-path \}\}/);assert.match(gate,/CHROME_DEVEL_SANDBOX: \$\{\{ steps\.chrome-sandbox\.outputs\.path \}\}/);assert.doesNotMatch(gate,/ARCHIFY_CHROME_NO_SANDBOX|--no-sandbox/);
+    if(file==='ci.yml')assert.match(gate,/--shard=\$\{\{ matrix\.shard \}\}\/2/);
+  }
 });
 
 test('release tags with a SemVer prerelease are marked prerelease and never become latest', () => {
@@ -726,6 +768,10 @@ canonicalZipTest('archive build rejects an unmerged index and preserves an exist
       path.join(skill, 'renderers', 'shared', 'atomic-output.mjs'),
     );
     fs.writeFileSync(path.join(skill, 'renderers', 'shared', 'generated-validators.mjs'), 'export default {};\n');
+    fs.mkdirSync(path.join(skill, 'references'), {recursive:true});
+    fs.writeFileSync(path.join(skill, 'references', 'prd-workspace.md'), '# PRD workspace\n');
+    fs.mkdirSync(path.join(skill, 'explainer', 'workspace'), {recursive:true});
+    for (const name of ['generated-prd-validators.mjs','generated-prd-feedback-browser.js','prd-feedback-schema.mjs','prd-proposal-schema.mjs']) fs.writeFileSync(path.join(skill, 'explainer', 'workspace', name), 'export {};\n');
     fs.writeFileSync(path.join(skill, 'scripts', 'check-update.mjs'), 'export {};\n');
     fs.writeFileSync(path.join(skill, 'scripts', 'update-contract.mjs'), 'export {};\n');
     fs.writeFileSync(path.join(skill, 'skill-release.json'), '{}\n');

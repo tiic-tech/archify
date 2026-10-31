@@ -3,7 +3,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import Ajv2020 from 'ajv/dist/2020.js';
+import Ajv from 'ajv';
+import { packageSchema, publicPackageSchema, storeSchema } from '../explainer/workspace/prd-feedback-schema.mjs';
+import { requestSchema } from '../explainer/workspace/prd-proposal-schema.mjs';
 import standaloneCode from 'ajv/dist/standalone/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -102,4 +106,35 @@ if (process.argv.includes('--check')) {
   fs.writeFileSync(temporary, generated);
   fs.renameSync(temporary, output);
   console.log(`generated ${path.relative(root, output)}`);
+}
+
+// PRD uses draft-07 (not the native diagram schemas' 2020-12 dialect).
+// Compile once per target from the same strict authoring contracts. The browser
+// embeds only the two feedback validators, without runtime AJV or eval.
+const workspaceSchema=JSON.parse(fs.readFileSync(path.join(schemasDir,'prd-workspace.schema.json'),'utf8'));
+if(workspaceSchema.$schema!=='http://json-schema.org/draft-07/schema#') throw new Error('PRD workspace schema dialect changed; update its generator explicitly.');
+const prdSchemas={workspace:workspaceSchema,feedbackPackage:packageSchema,publicFeedbackPackage:publicPackageSchema,feedbackStore:storeSchema,changeRequest:requestSchema};
+const require=createRequire(import.meta.url),equalPath=require.resolve('fast-deep-equal');
+const equalSource=fs.readFileSync(equalPath,'utf8'),equalLicense=fs.readFileSync(path.join(path.dirname(equalPath),'LICENSE'),'utf8');
+if(!equalSource.includes('module.exports = function equal')||!equalSource.trimEnd().endsWith('};')) throw new Error('Unexpected fast-deep-equal source');
+const inlineEqual=`/* fast-deep-equal, used by AJV standalone:\n${equalLicense}\n*/\n`+equalSource.replace(/^'use strict';/,'').replace('module.exports = function equal','(function equal').replace(/};\s*$/,'})');
+function inlineRuntime(code){
+  const result=code.replaceAll(ajvUcs2Import,inlineUcs2Length).replaceAll('require("ajv/dist/runtime/equal").default',inlineEqual);
+  if(result.includes('require(')) throw new Error('PRD standalone output contains an unexpected runtime dependency');
+  return result;
+}
+const prdAjv=new Ajv({allErrors:true,strict:false,code:{source:true,esm:true}});
+for(const [name,schema] of Object.entries(prdSchemas)) prdAjv.addSchema(schema,name);
+const prdCode=banner+inlineRuntime(standaloneCode(prdAjv,Object.fromEntries(Object.keys(prdSchemas).map(name=>[name,name]))))+'\n';
+const browserAjv=new Ajv({allErrors:true,strict:false,code:{source:true}});
+const browserValidator=(name,schema)=>`const ${name}=(()=>{const module={exports:{}};${inlineRuntime(standaloneCode(browserAjv,browserAjv.compile(schema)))};return module.exports;})();`;
+const browserCode=banner+browserValidator('prdFeedbackValidate',packageSchema)+'\n'+browserValidator('prdPublicFeedbackValidate',publicPackageSchema)+'\n';
+for(const [file,content] of [['generated-prd-validators.mjs',prdCode],['generated-prd-feedback-browser.js',browserCode]]){
+  const target=path.join(root,'explainer/workspace',file);
+  if(process.argv.includes('--check')){
+    const current=fs.existsSync(target)?fs.readFileSync(target,'utf8').replace(/\r\n?/g,'\n'):'';
+    if(current!==content){console.error(`${file} is stale — run npm run generate:validators`);process.exitCode=1;}
+  }else{
+    const temporary=`${target}.${process.pid}.tmp`;fs.writeFileSync(temporary,content);fs.renameSync(temporary,target);console.log(`generated ${path.relative(root,target)}`);
+  }
 }
