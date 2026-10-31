@@ -1,6 +1,6 @@
 ---
 name: archify
-description: "Create evidence-backed research and PRD workspaces, or validated native diagrams for workflows, systems, schemas, histories and relationships as explorable standalone HTML. Accept requirements or Mermaid and inspect repository evidence for code-backed diagrams. Also create a one-page explainer when requested (做成一页, 用页面讲) or when an [archify explainer: ...] rule opts in; add guided stories and video to native diagrams when requested. Not for dashboards."
+description: "Create evidence-backed research and PRD workspaces, or validated architecture, workflow, sequence, data-flow and lifecycle diagrams as explorable standalone HTML. Use when modeling systems, schemas, histories or relationships from requirements, Mermaid or repository evidence. Create a one-page explainer when requested (做成一页, 用页面讲) or when an [archify explainer: ...] rule opts in; add guided stories and video to native diagrams when requested. Not for dashboards."
 license: Apache-2.0
 metadata:
   version: "3.3"
