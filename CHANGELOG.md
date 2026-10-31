@@ -4,7 +4,7 @@ All notable changes are documented here. Format loosely follows [Keep a Changelo
 
 ## [Unreleased]
 
-> Development identity: `v3.3.0-dev.1`. Independent Fork foundation prerelease; not an official stable release.
+> Development identity: `v3.3.0-dev.2`. Independent Fork foundation prerelease; not an official stable release.
 
 ### Added
 - **Versioned research and PRD workspace foundation.** Retain source-backed research and questions, author native Feature workflows and opt into structured standard PRD projections with scoped readiness and independently approved public material. The offline reader and explicit feedback transfer do not provide durable canvas editing, autosave or cloud collaboration; review bindings are not business confirmation. See [Fork prerelease scope](docs/plans/prd-standard/FORK_PRERELEASE.md).
