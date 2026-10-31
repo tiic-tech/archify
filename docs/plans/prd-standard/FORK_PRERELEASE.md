@@ -1,6 +1,6 @@
 # Independent Fork development prerelease scope
 
-**Candidate:** `tiic-tech/archify` `v3.3.0-dev.1`, a development prerelease of the integrated Archify product, not an official `tt-a1i/archify` stable release. This document describes intended scope, not a claim that a tag, release, installation or deployment exists. Apache-2.0 licensing and existing attribution remain in force.
+**Candidate:** `tiic-tech/archify` `v3.3.0-dev.2`, a development prerelease of the integrated Archify product, not an official `tt-a1i/archify` stable release. This document describes intended scope, not a claim that a tag, release, installation or deployment exists. Apache-2.0 licensing and existing attribution remain in force.
 
 ## Foundation included
 

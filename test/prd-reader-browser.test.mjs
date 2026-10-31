@@ -6,6 +6,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { ChromeVisualBrowser, findChrome } from '../archify/bin/visual-check.mjs';
+import {nativePhysicalClick} from './helpers/native-physical-click.mjs';
 
 const cli=path.resolve('archify/bin/archify.mjs');
 const fixture=path.resolve('test/fixtures/prd-workspace-reader/reader.json');
@@ -79,33 +80,9 @@ test('real native Viewer routes into model detail, retains context and bounds fr
   const val=async(expr,s=session)=>{const r=await send('Runtime.evaluate',{expression:expr,awaitPromise:true,returnByValue:true},s);assert.equal(r.exceptionDetails,undefined,r.exceptionDetails?.exception?.description);return r.result?.value;};
   const wait=async(expr,s=session)=>{let v;for(let i=0;i<200;i++){v=await val(expr,s);if(v)return v;await new Promise(r=>setTimeout(r,50));}assert.fail(`Timed out: ${expr}; last=${JSON.stringify(v)}`);};
   const click=async(selector,s=session)=>{
-    let park;
-    if(s!==session){
-      // Hit tests can lead compositor routing. Enter the settled opaque frame
-      // with a trusted host-to-child move before physically pressing a target.
-      await val('Promise.all(document.querySelector("#world").getAnimations().map(a=>a.finished.catch(()=>{})))');
-      await val('Promise.all(document.querySelector(".diagram-container > svg").getAnimations().map(a=>a.finished.catch(()=>{})))',s);
-      await val('new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))');
-      park=await val(`(()=>{const f=document.querySelector('#native');for(const [x,y] of [[2,2],[innerWidth-2,2],[2,innerHeight-2],[innerWidth-2,innerHeight-2]]){const hit=document.elementFromPoint(x,y);if(hit&&hit!==f)return {x,y,hit:hit.id||hit.tagName};}return null})()`);
-      assert.ok(park,'a visible host point outside the native frame is required');
-      await val(`window.__hostPointer=null;document.addEventListener('pointermove',e=>window.__hostPointer={trusted:e.isTrusted,x:e.clientX,y:e.clientY},{capture:true,once:true})`);
-      await send('Input.dispatchMouseEvent',{type:'mouseMoved',x:park.x,y:park.y});await wait('window.__hostPointer!==null');
-      assert.deepEqual(await val('window.__hostPointer'),{trusted:true,x:park.x,y:park.y},'pointer must first reach the host');
-    }
-    const p=await val(`(async()=>{const e=document.querySelector(${JSON.stringify(selector)});if(!e)return null;e.scrollIntoView({block:'nearest',behavior:'instant'});await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));const r=e.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2,hit=document.elementFromPoint(x,y);return {x,y,rect:r.toJSON(),hit:e.contains(hit),hitTag:hit?.tagName}})()`,s);
-    assert.ok(p?.hit,selector+JSON.stringify(p));
-    if(s!==session){
-      const f=await val(`(()=>{const e=document.querySelector('#native'),r=e.getBoundingClientRect();return {rect:r.toJSON(),scale:r.width/e.offsetWidth,world:document.querySelector('#world').style.transform,animations:document.querySelector('#world').getAnimations().length}})()`);
-      const x=f.rect.x+p.x*f.scale,y=f.rect.y+p.y*f.scale,hostHit=await val(`(()=>{const e=document.elementFromPoint(${x},${y});return {id:e?.id,tag:e?.tagName}})()`);
-      const diagnostics={selector,park,frame:f,node:p,point:{x,y},hostHit,camera:await val('Archify.view.state()',s),nativeAnimations:await val('document.querySelector(".diagram-container > svg").getAnimations().length',s)};
-      assert.equal(hostHit.id,'native','native frame must receive pointer '+JSON.stringify(diagnostics));
-      await val(`(()=>{window.__testNativePointer=null;const target=document.querySelector(${JSON.stringify(selector)});document.addEventListener('pointermove',e=>{window.__testNativePointer={trusted:e.isTrusted,hit:target===e.target||target.contains(e.target),tag:e.target.tagName}},{capture:true,once:true});})()`,s);
-      await send('Input.dispatchMouseEvent',{type:'mouseMoved',x,y});
-      try{await wait('window.__testNativePointer!==null',s);}catch{assert.fail('Native pointer move was not delivered: '+JSON.stringify({...diagnostics,hostPointer:await val('window.__hostPointer'),nativePointer:await val('window.__testNativePointer',s),route:await val('location.hash'),status:await val('document.querySelector("#status").textContent')}));}
-      const pointer=await val('window.__testNativePointer',s);assert.equal(pointer.trusted,true,JSON.stringify({...diagnostics,pointer}));assert.equal(pointer.hit,true,JSON.stringify({...diagnostics,pointer}));
-      p.x=x;p.y=y;
-    }
-    for(const type of ['mousePressed','mouseReleased'])await send('Input.dispatchMouseEvent',{type,x:p.x,y:p.y,button:'left',clickCount:1});
+    if(s!==session)return nativePhysicalClick({selector,child:s,send,value:val,wait});
+    const p=await val(`(async()=>{const e=document.querySelector(${JSON.stringify(selector)});if(!e)return null;e.scrollIntoView({block:'nearest',behavior:'instant'});await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));const r=e.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;return {x,y,hit:e.contains(document.elementFromPoint(x,y))}})()`);
+    assert.ok(p?.hit,selector+JSON.stringify(p));for(const type of ['mousePressed','mouseReleased'])await send('Input.dispatchMouseEvent',{type,x:p.x,y:p.y,button:'left',clickCount:1});
   };
   const key=async k=>{for(const type of ['keyDown','keyUp'])await send('Input.dispatchKeyEvent',{type,key:k,code:k,windowsVirtualKeyCode:k==='Enter'?13:k==='Tab'?9:0,...(k==='Enter'&&type==='keyDown'?{text:'\r',unmodifiedText:'\r'}:{})});};
   const attach=async()=>{const tree=await send('Page.getFrameTree');let target;for(let i=0;i<120;i++){target=(await send('Target.getTargets')).targetInfos.find(x=>x.type==='iframe'&&x.parentId===tree.frameTree.frame.id&&x.url.startsWith('about:srcdoc'));if(target)break;await new Promise(r=>setTimeout(r,50));}assert.ok(target,'opaque frame');const child=(await send('Target.attachToTarget',{targetId:target.targetId,flatten:true})).sessionId;await send('Runtime.enable',{},child);return child;};

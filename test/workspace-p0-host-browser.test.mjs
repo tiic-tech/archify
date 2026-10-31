@@ -6,6 +6,7 @@ import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {buildWorkspace} from '../archify/explainer/workspace/build.mjs';
 import {ChromeVisualBrowser,findChrome} from '../archify/bin/visual-check.mjs';
+import {nativePhysicalClick} from './helpers/native-physical-click.mjs';
 
 const fixture=JSON.parse(fs.readFileSync(new URL('./fixtures/workspace-p0/maintenance.json',import.meta.url)));
 const chrome=process.env.ARCHIFY_CHROME?findChrome():null;
@@ -24,7 +25,7 @@ test('opaque native workspace supports real navigation, trust checks, cameras an
   const value=async(expression,s=session)=>{const result=await send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true},s);assert.equal(result.exceptionDetails,undefined,result.exceptionDetails?.exception?.description);return result.result?.value;};
   const wait=async(expression,s=session)=>{let result;for(let i=0;i<120;i++){result=await value(expression,s);if(result)return result;await new Promise(resolve=>setTimeout(resolve,50));}assert.fail(`Timed out: ${expression}; last=${JSON.stringify(result)}`);};
   const navigate=async url=>{let timer;const loaded=browser.cdp.waitFor('Page.loadEventFired',session);const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('load timeout')),10000);});try{await send('Page.navigate',{url});await Promise.race([loaded,timeout]);}finally{clearTimeout(timer);}await wait('document.querySelector("#stage")?.dataset.nativeReady==="intake"');};
-  const click=async(selector,s=session)=>{const r=await value(`(()=>{const e=document.querySelector(${JSON.stringify(selector)});if(!e)return null;const r=e.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()`,s);assert.ok(r,selector);if(s!==session){const f=await value(`(()=>{const e=document.querySelector('#native'),r=e.getBoundingClientRect();return {x:r.x,y:r.y,scale:r.width/e.offsetWidth}})()`);r.x=f.x+r.x*f.scale;r.y=f.y+r.y*f.scale;}for(const type of ['mousePressed','mouseReleased'])await send('Input.dispatchMouseEvent',{type,...r,button:'left',clickCount:1});};
+  const click=async(selector,s=session)=>{if(s!==session)return nativePhysicalClick({selector,child:s,send,value,wait,scroll:false});const r=await value(`(()=>{const e=document.querySelector(${JSON.stringify(selector)});if(!e)return null;const r=e.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()`);assert.ok(r,selector);for(const type of ['mousePressed','mouseReleased'])await send('Input.dispatchMouseEvent',{type,...r,button:'left',clickCount:1});};
   const key=async(key)=>{for(const type of ['keyDown','keyUp'])await send('Input.dispatchKeyEvent',{type,key,code:key,windowsVirtualKeyCode:key==='Enter'?13:0,...(key==='Enter'&&type==='keyDown'?{text:'\r',unmodifiedText:'\r'}:{})});};
   await send('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
   await navigate(pathToFileURL(file).href+'?theme=dark');
@@ -52,13 +53,7 @@ test('opaque native workspace supports real navigation, trust checks, cameras an
       await wait('document.querySelector("#world").style.transform.includes("-80px")');
       await value('Promise.all(document.querySelector("#world").getAnimations().map(a=>a.finished.catch(()=>{})))');
     }
-    const nativeClick=async selector=>{
-      const point=await value(`(()=>{const e=document.querySelector(${JSON.stringify(selector)}),r=e.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;return {x,y,hit:e.contains(document.elementFromPoint(x,y))}})()`,child);
-      const frame=await value('(()=>{const r=document.querySelector("#native").getBoundingClientRect();return {left:r.left,top:r.top}})()');
-      const x=frame.left+point.x,y=frame.top+point.y;
-      assert.ok(point.hit&&x>=0&&x<viewport.width&&y>=0&&y<viewport.height&&await value(`document.elementFromPoint(${x},${y})?.id==="native"`),JSON.stringify({viewport,selector,point,frame}));
-      await send('Input.dispatchMouseEvent',{type:'mousePressed',x,y,button:'left',clickCount:1});await send('Input.dispatchMouseEvent',{type:'mouseReleased',x,y,button:'left',clickCount:1});
-    };
+    const nativeClick=selector=>nativePhysicalClick({selector,child,send,value,wait,scroll:false,viewport});
     const scale=await value('Archify.view.state().scale',child);
     await nativeClick('[data-view="in"]');await wait(`Archify.view.state().scale>${scale}`,child);
     await nativeClick('[data-view="out"]');await wait(`Archify.view.state().scale===${scale}`,child);
